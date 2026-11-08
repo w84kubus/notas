@@ -31,7 +31,22 @@ npm run build      # buduje dist/
 npm start          # produkcja: serwer + dist na jednym porcie (PORT, domyślnie 8787)
 ```
 
-## Wdrożenie (Fly.io)
+## Wdrożenie z GitHuba (Render)
+
+GitHub nie uruchomi tej aplikacji (Pages hostuje tylko pliki statyczne, a Notas potrzebuje procesu Node z WebSocketami). Najprościej podłączyć repo do Render, który sam pobiera kod i wdraża po każdym pushu na `main`.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/w84kubus/notas)
+
+1. Kliknij przycisk powyżej i zaloguj się na Render przez GitHub.
+2. Zatwierdź Blueprint z pliku `render.yaml` (plan `free`, region Frankfurt).
+3. Po kilku minutach dostaniesz adres `https://notas-xxxx.onrender.com`.
+4. Własna domena: w ustawieniach usługi → Custom Domains → `notas.pl`.
+
+Uwagi:
+- **Plan `free` usypia usługę po ok. 15 minutach bez ruchu, a pokoje żyją w pamięci**, więc po uśpieniu znikają (użytkownicy zobaczą „Pokój wygasł”). Pierwsze wejście po uśpieniu trwa ok. minuty. Plan `starter` (płatny) nie usypia.
+- Nie skaluj do 2 instancji z tego samego powodu co na Fly.io (pokoje są w pamięci jednego procesu).
+
+## Wdrożenie alternatywne (Fly.io)
 
 Aplikacja potrzebuje długo działającego procesu Node z WebSocketami. **Nie nadaje się do Vercela** (funkcje serverless nie trzymają WebSocketów). W repo są gotowe `Dockerfile` i `fly.toml` (region Warszawa, jedna maszyna, bez usypiania, bo pokoje żyją w pamięci procesu).
 

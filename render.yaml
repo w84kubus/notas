@@ -1,0 +1,16 @@
+# Render Blueprint: wdrożenie Notas.pl prosto z repozytorium GitHub.
+# Każdy push na `main` wdraża nową wersję automatycznie.
+services:
+  - type: web
+    name: notas
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: frankfurt
+    plan: free            # darmowy plan usypia się po bezczynności; `starter` tego nie robi
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ROOM_TTL_HOURS
+        value: "12"

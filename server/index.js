@@ -55,9 +55,11 @@ const creations = makeLimiter(12, 60_000, 2 * 60_000)
 
 function clientIp(req) {
   if (TRUST_PROXY) {
-    // Fly.io ustawia fly-client-ip (nie do podrobienia); inne proxy: pierwszy wpis X-Forwarded-For
-    const f = req.headers['fly-client-ip']
-    if (typeof f === 'string' && f) return f
+    // Nagłówki ustawiane przez proxy hostingu (Fly.io, Render/Cloudflare); w ostateczności X-Forwarded-For
+    for (const h of ['fly-client-ip', 'cf-connecting-ip']) {
+      const v = req.headers[h]
+      if (typeof v === 'string' && v) return v
+    }
     const x = req.headers['x-forwarded-for']
     if (typeof x === 'string' && x) return x.split(',')[0].trim()
   }
