@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { CSSProperties, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
@@ -558,7 +558,7 @@ function ChatList({ msgs, me }: { msgs: ChatMsg[]; me: number }) {
       {msgs.length === 0 && <p className="empty">Tu pojawią się wiadomości. Możesz je wyczyścić jednym kliknięciem.</p>}
       {msgs.map((m) => (
         <div key={m.id} className={`msg ${m.by === me ? 'mine' : ''}`}>
-          <span className="msg-name" style={{ color: m.color }}>
+          <span className="msg-name" style={{ '--c': m.color } as CSSProperties}>
             {m.name}
           </span>
           <span className="msg-text">{m.text}</span>

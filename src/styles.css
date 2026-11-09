@@ -88,7 +88,7 @@ button { cursor: pointer; }
   width: 28px; height: 28px; border-radius: 50%; margin-left: -6px; border: 2px solid var(--paper);
   display: grid; place-items: center; color: #fff; font-size: 0.78rem; font-weight: 700; flex: none;
 }
-.avatar-more { background: var(--ink-2); }
+.avatar-more { background: var(--ink-2); color: var(--paper); }
 .icon-btn {
   width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; border: 0; background: transparent; flex: none;
 }
@@ -114,6 +114,8 @@ button { cursor: pointer; }
 .tiptap > * + * { margin-top: 0.7em; }
 .tiptap h2 { font-size: 1.3rem; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 0; }
 .tiptap ul, .tiptap ol { padding-left: 1.4rem; }
+.tiptap li > p { margin: 0; }
+.tiptap li + li { margin-top: 0.3em; }
 .tiptap mark { background: var(--hl); color: var(--on-hl); border-radius: 3px; padding: 0 2px; }
 .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--ink-2); float: left; height: 0; pointer-events: none; }
 .collaboration-carets__caret { position: relative; margin-left: -1px; margin-right: -1px; border-left: 2px solid; border-right: 0; word-break: normal; pointer-events: none; }
@@ -137,7 +139,7 @@ button { cursor: pointer; }
 .empty { color: var(--ink-2); font-size: 0.92rem; margin: 0; }
 .msg { padding-left: 0.6rem; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
 .msg.mine { border-left-color: var(--hl); }
-.msg-name { font-weight: 700; margin-right: 0.45rem; font-size: 0.92rem; }
+.msg-name { font-weight: 700; margin-right: 0.45rem; font-size: 0.92rem; color: color-mix(in srgb, var(--c) 60%, var(--ink)); }
 .msg-text { font-size: 0.97rem; }
 .chat-input { display: flex; gap: 0.25rem; padding: 0.5rem 0.6rem; border-top: 1px solid var(--line); }
 .chat-input input { flex: 1; min-width: 0; height: 38px; padding: 0 0.7rem; border-radius: 8px; border: 1.5px solid var(--line); background: var(--card); }

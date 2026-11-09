@@ -1,5 +1,6 @@
 const NAMES = ['Sowa', 'Lis', 'Jeż', 'Bóbr', 'Wydra', 'Kruk', 'Żuraw', 'Rys', 'Dzik', 'Łoś', 'Wilk', 'Orzeł', 'Borsuk', 'Sarna']
-const COLORS = ['#D9480F', '#1C7ED6', '#2F9E44', '#7048E8', '#B8730A', '#0C8599', '#C2255C', '#4C5C7A']
+// Każdy kolor ma kontrast ≥ 4,5 : 1 z białym tekstem (etykieta kursora, inicjał w awatarze).
+const COLORS = ['#C2410C', '#1D63C4', '#2B7A3D', '#7048E8', '#A15C07', '#0E7490', '#C2255C', '#4C5C7A']
 
 export type Identity = { name: string; color: string }
 
