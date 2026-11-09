@@ -80,6 +80,34 @@ function roomPeople(code) {
   return d ? d.conns.size : 0
 }
 
+// Zamknięcie pokoju na życzenie uczestnika: wszyscy dostają kod 4001, treść znika z pamięci.
+const CLOSE_CODE = 4001
+function closeRoom(code) {
+  rooms.delete(code) // od tej chwili nikt nie wejdzie
+  const doc = docs.get(code)
+  if (!doc) return
+  for (const conn of [...doc.conns.keys()]) {
+    try {
+      conn.close(CLOSE_CODE, 'room closed')
+    } catch {}
+  }
+  // chwila na zamknięcie połączeń, dopiero potem niszczymy dokument
+  setTimeout(() => {
+    if (docs.get(code) === doc) docs.delete(code)
+    doc.destroy()
+  }, 200).unref()
+}
+
+function sameOrigin(req) {
+  const origin = req.headers.origin
+  if (!origin) return true
+  try {
+    return new URL(origin).host === req.headers.host
+  } catch {
+    return false
+  }
+}
+
 // ---------- HTTP ----------
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -164,6 +192,18 @@ const server = http.createServer((req, res) => {
   }
 
   const m = url.pathname.match(/^\/api\/rooms\/([^/]+)$/)
+  if (req.method === 'DELETE' && m) {
+    if (!sameOrigin(req)) return json(res, 403, { error: 'forbidden' })
+    if (failedJoins.blocked(ip)) return json(res, 429, { error: 'too_many' })
+    const code = m[1].toUpperCase()
+    if (!CODE_RE.test(code) || !rooms.has(code)) {
+      failedJoins.hit(ip)
+      return json(res, 404, { error: 'not_found' })
+    }
+    closeRoom(code)
+    return json(res, 200, { ok: true })
+  }
+
   if (req.method === 'GET' && m) {
     if (failedJoins.blocked(ip)) return json(res, 429, { error: 'too_many' })
     const code = m[1].toUpperCase()
@@ -198,14 +238,7 @@ server.on('upgrade', (req, socket, head) => {
   if (!m) return reject(socket, 404, 'Not Found') // HMR Vite ma osobny port
 
   // tylko ta sama domena (blokuje cudze strony łączące się z pokojami)
-  const origin = req.headers.origin
-  if (origin) {
-    let host = ''
-    try {
-      host = new URL(origin).host
-    } catch {}
-    if (host !== req.headers.host) return reject(socket, 403, 'Forbidden')
-  }
+  if (!sameOrigin(req)) return reject(socket, 403, 'Forbidden')
 
   const ip = clientIp(req)
   if (failedJoins.blocked(ip)) return reject(socket, 429, 'Too Many Requests')

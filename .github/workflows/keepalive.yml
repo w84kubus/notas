@@ -1,0 +1,21 @@
+name: Keep-alive
+
+# Darmowy plan Render usypia usługę po ok. 15 minutach bez ruchu, a razem z nią pokoje.
+# Ten workflow pinguje /healthz co 10 minut w ciągu dnia (6:00-22:00 czasu polskiego, w przybliżeniu),
+# żeby pokoje nie znikały w trakcie wykładów. W nocy usługa może spać.
+#
+# Adres bierze ze zmiennej repozytorium NOTAS_URL (Settings → Secrets and variables → Actions → Variables).
+# Po podpięciu domeny wystarczy ją tam zmienić, kod zostaje bez zmian.
+on:
+  schedule:
+    - cron: '*/10 5-21 * * *' # UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /healthz
+        env:
+          NOTAS_URL: ${{ vars.NOTAS_URL || 'https://notas-mm5e.onrender.com' }}
+        run: curl --fail --silent --show-error --max-time 90 --retry 2 --retry-delay 5 "$NOTAS_URL/healthz"

@@ -65,7 +65,7 @@ npm run dev          # http://localhost:8787 (Vite wbudowany w serwer)
 npm run build
 npm start            # produkcja: serwer + dist/
 npm run typecheck
-npm test             # build, potem 16 testów serwera
+npm test             # build, potem 19 testów serwera
 ```
 
 Podgląd w aplikacji: konfiguracje `notas` (dev, port 8787) i `notas-prod` (port 8791)
@@ -80,15 +80,54 @@ w `.claude/launch.json` folderu nadrzędnego.
 - [x] Faza 5 — PWA (manifest, service worker), jasny i ciemny motyw
 - [x] Faza 6 — TipTap 3 (0 podatności), podział bundla, testy serwera (16), CI
 - [x] Faza 7 — wdrożenie na Render z GitHuba, README PL/EN, SPEC, DESIGN
+- [x] Faza 8 — cofnij/ponów, menu pokoju (⋯), kod QR, „Zamknij pokój dla wszystkich" (kod 4001),
+      strona Prywatność, workflow `keepalive.yml`
 
 ### Co realnie zostało
 
 - Podpięcie domeny **notas.pl** (Render → Settings → Custom Domains)
-- Przycisk „Zamknij pokój dla wszystkich" (natychmiastowe usunięcie treści z serwera)
 - Test w Firefoksie i Safari (tam okno mini to zwykłe okienko)
 - Testy interfejsu (dziś tylko serwer ma testy automatyczne)
+- Wersja angielska interfejsu (pozostałe projekty mają PL/EN)
+- Wzory matematyczne (KaTeX), tabele, bloki kodu
 
 ## Konwencje, które łatwo przeoczyć
+
+### Zamknięcie pokoju: kod 4001
+
+`DELETE /api/rooms/:kod` zamyka pokój: serwer kończy KAŻDE połączenie kodem WebSocket **4001**,
+usuwa pokój z rejestru od razu, a dokument niszczy po 200 ms (żeby połączenia zdążyły się zamknąć).
+Klient rozpoznaje 4001 w zdarzeniu `connection-close` i pokazuje „Pokój został zamknięty", a nie
+„Pokój wygasł" — to dwa różne komunikaty o dwóch różnych sytuacjach. Zamknąć może każdy, kto zna kod
+(kod i tak daje pełny dostęp do treści); okno potwierdzenia jest jedyną ochroną przed przypadkiem.
+
+### Esc w menu i oknach
+
+`Esc` globalnie ukrywa ekran. Menu pokoju i okna dialogowe przechwytują `Esc` przez
+`stopPropagation()` w handlerze `onKeyDown`, więc zamykają się, zamiast ukryć ekran. To działa tylko,
+gdy **fokus jest wewnątrz** menu lub okna — dlatego otwarcie przenosi fokus na pierwszy element
+(`data-autofocus` w dialogach). Nowe okno bez przeniesienia fokusu pozwoli `Esc` ukryć ekran pod nim.
+
+### Serwer podglądu nie przeładowuje kodu serwera
+
+Vite w trybie dev odświeża front, ale `server/index.js` jest wczytywany raz. **Po każdej zmianie serwera
+zrestartuj podgląd** (`preview_stop` + `preview_start`). Nieświeży serwer potrafi zwracać 404 dla nowej
+trasy i objawia się jak błąd klienta — tak wyglądało pierwsze podejście do „Zamknij pokój".
+`preview_start` przekierowuje swoją kartę na stronę główną, więc pokoje do testu otwieraj w osobnych kartach.
+
+### Cofanie jest per osoba
+
+Cofanie robi menedżer cofania Yjs dołączony przez rozszerzenie Collaboration (nie historia ProseMirror,
+stąd `undoRedo: false`). Sprawdzone: `Ctrl+Z` w jednej karcie cofa jej tekst i zostawia cudzy.
+Przyciski Cofnij/Ponów w pasku wołają `editor.chain().focus().undo()`; `editor.can().undo()` wyłącza je,
+gdy nie ma co cofać. Nie przechodź na globalne cofanie.
+
+### Podtrzymywanie serwera
+
+`.github/workflows/keepalive.yml` pinguje `/healthz` co 10 min w godzinach 5-21 UTC (ok. 6-22 w Polsce).
+Adres bierze ze zmiennej repozytorium `NOTAS_URL`; po podpięciu domeny zmień zmienną, nie kod.
+GitHub bywa spóźniony i wstrzymuje harmonogramy po 60 dniach bez aktywności w repo — to łagodzenie
+usypiania na darmowym planie, nie gwarancja.
 
 ### Hosting z WebSocketami — nie Vercel
 

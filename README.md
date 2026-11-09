@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/WebSocket-realtime-E4002B" alt="WebSocket realtime" />
   <img src="https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white" alt="PWA" />
   <img src="https://img.shields.io/badge/privacy-no_accounts-22C55E" alt="No accounts" />
-  <img src="https://img.shields.io/badge/tests-16-22C55E?logo=nodedotjs&logoColor=white" alt="16 tests" />
+  <img src="https://img.shields.io/badge/tests-19-22C55E?logo=nodedotjs&logoColor=white" alt="19 tests" />
 </p>
 
 ---
@@ -55,6 +55,14 @@ It is built for a lecture hall, so it is **quick, small and discreet**:
 |---|---|
 | ![Start screen](docs/screenshots/start.png) | ![A room in the light theme](docs/screenshots/pokoj-jasny.png) |
 
+### Room menu and QR code
+
+Show the screen, everyone scans. The menu (⋯) is the same in the big window and in the mini one.
+
+| QR code | Menu in the mini window |
+|---|---|
+| ![QR code dialog](docs/screenshots/qr.png) | ![Room menu in the mini window](docs/screenshots/menu-mini.png) |
+
 ### Dark theme
 
 The interface follows the system theme. Nothing is configured, nothing to switch.
@@ -78,11 +86,14 @@ window width, not by the device, so the notes and the chat become two tabs.
 - **Link or code** - `notas.pl/K7M2QX` goes straight into the room; the code chip in the corner copies the link
 - **Rooms expire** - 12 hours without activity and the room is gone, along with its notes and chat
 - **Up to 30 people** per room
+- **QR code** - one click in the menu shows a code to scan, for when the room is on a projector
+- **Close the room for everyone** - after a confirmation the notes and the chat vanish from the server at once. Everyone still in the room sees "the room was closed" and can download their notes first
 
 ### Editor
 - **Live co-writing** - concurrent edits merge instead of overwriting each other (Yjs, a CRDT)
 - **Cursors and selections** of other people, labelled with their nicknames
 - **Formatting** - bold, italic, headings, bulleted and numbered lists, and a **highlighter**
+- **Undo and redo** - `Ctrl+Z` reverts only *your* changes and never somebody else's; buttons for phones that have no keyboard
 - **Download** - the notes as a standalone `.html` file, because the room will not live forever
 
 ### Chat
@@ -110,6 +121,7 @@ window width, not by the device, so the notes and the chat become two tabs.
 - **Same-origin WebSockets** - a connection from another site is refused (`403`)
 - **Strict Content-Security-Policy**, `no-referrer`, `noindex`, no framing
 - **No analytics, no content logs**
+- **A privacy page** (`/prywatnosc`) that says in plain language what the server sees and what it does not
 - **Content lives only in the server's memory** - nothing is written to disk or to a database
 
 ### PWA
@@ -124,9 +136,10 @@ window width, not by the device, so the notes and the chat become two tabs.
 | Editor | [TipTap](https://tiptap.dev/) 3 (ProseMirror) with the Collaboration and Collaboration Caret extensions |
 | Sync | [Yjs](https://yjs.dev/) (CRDT) over WebSockets, `y-websocket` |
 | Server | Node.js 22, plain `http` + [`ws`](https://github.com/websockets/ws), no framework |
+| QR code | [`qrcode`](https://github.com/soldair/node-qrcode) (SVG, loaded only when the dialog opens) |
 | Styling | Hand-written CSS - tokens, container queries, no framework |
 | Fonts | Schibsted Grotesk (self-hosted via Fontsource) |
-| Tests | `node:test` (16 tests, each suite runs a real server process) |
+| Tests | `node:test` (19 tests, each suite runs a real server process) |
 | CI | GitHub Actions (type check + tests) |
 | Deploy | Docker; Render Blueprint (`render.yaml`) or Fly.io (`fly.toml`) |
 
@@ -135,20 +148,22 @@ window width, not by the device, so the notes and the chat become two tabs.
 ```
 server/
 ├── index.js                # one process: HTTP API, static files, WebSocket, rooms, limits, sweep
-└── server.test.js          # 16 tests, a real server process per suite
+└── server.test.js          # 19 tests, a real server process per suite
 
 src/
 ├── main.tsx                # entry: fonts, styles, service worker (production only)
 ├── App.tsx                 # tiny router (/ and /:code), loads the room lazily
 ├── Home.tsx                # start screen: create a room or enter a code
 ├── Room.tsx                # the room: Yjs provider, workspace, chat, mini window, hide
+├── RoomMenu.tsx            # room menu (⋯), dialogs: QR code and closing the room
+├── Privacy.tsx             # the privacy page
 ├── identity.ts             # random nickname + colour, kept per tab (sessionStorage)
 ├── icons.tsx               # inline SVG icons
 └── styles.css              # tokens, light and dark theme, container queries
 
 public/                     # manifest, service worker, icons
 docs/screenshots/           # README screenshots
-Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml
+Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml · keepalive.yml
 ```
 
 ### Key design decisions
@@ -161,6 +176,8 @@ Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml
 - **The mini window is the same React tree** - for Document Picture-in-Picture the whole workspace is rendered through a portal into the floating window, with the styles cloned across. The editor remounts there, but the Yjs document is untouched, so nothing is lost on the way.
 - **Layout from container queries, not media queries** - the room reacts to the width of the window it is in. A 380 px floating window, a pop-up and a phone all get the same tabbed layout from one rule, with no device detection.
 - **Hiding is not just a cover** - while hidden, the editor is read-only and the chat input is disabled, because a white page you can still type into is worse than no hiding at all.
+- **Closing a room is a capability of the code** - whoever knows the code can already read and wipe everything, so closing needs nothing more. The server ends every connection with the custom code `4001`, which the client reads as "closed on purpose" and not as "the server went away", so the message can be honest about which one happened.
+- **Undo is per person** - the editor uses Yjs's own undo manager, not ProseMirror's history. `Ctrl+Z` reverts only your own edits; in a shared document a global undo would erase what somebody else just wrote.
 - **The editor loads only inside a room** - the start screen is ~48 KB gzipped, the editor chunk arrives on the way into the room.
 - **The server serves the front too** - in production the same process serves `dist/` and the WebSockets, in development Vite runs inside it as middleware. One port, no CORS, one thing to deploy.
 
@@ -182,7 +199,7 @@ npm run dev          # http://localhost:8787 (Vite runs inside the server)
 npm run build        # builds the front into dist/
 npm start            # production: the server and dist/ on one port
 npm run typecheck    # tsc --noEmit
-npm test             # builds, then runs 16 server tests
+npm test             # builds, then runs 19 server tests
 ```
 
 Environment variables (`PORT`, `TRUST_PROXY`, `ROOM_TTL_HOURS`) are described in [`.env.example`](.env.example).
@@ -210,11 +227,11 @@ fly deploy
 Things that apply to both:
 - **Run exactly one instance.** Rooms live in one process's memory.
 - **A deploy or a restart ends every room.** People see "the room has expired" and can download their notes.
-- Render's **free plan sleeps** after ~15 minutes without traffic, which also ends the rooms. The paid `starter` plan does not sleep.
+- Render's **free plan sleeps** after ~15 minutes without traffic, which also ends the rooms. The paid `starter` plan does not sleep. [`keepalive.yml`](.github/workflows/keepalive.yml) pings `/healthz` every 10 minutes during the day (about 6:00-22:00 Polish time) from GitHub Actions, so rooms survive a lecture; set the repository variable `NOTAS_URL` to change the address. GitHub can delay scheduled runs and pauses them after 60 days without repository activity, so this is a mitigation, not a guarantee.
 
 ## Tests
 
-`npm test` builds the front and runs 16 tests with `node:test`. Each suite starts a **real server
+`npm test` builds the front and runs 19 tests with `node:test`. Each suite starts a **real server
 process** on a free port and talks to it over HTTP and WebSockets, so what is tested is what is deployed.
 
 | Area | What is checked |
@@ -223,6 +240,7 @@ process** on a free port and talks to it over HTTP and WebSockets, so what is te
 | Static | security headers, SPA fallback for room links, path traversal, PWA manifest |
 | WebSocket | joining a room, refusing a missing room (`404`), refusing another origin (`403`) |
 | Sync | two clients see each other's text and chat, a newcomer gets what was already written, rooms are isolated |
+| Closing | `DELETE` closes the room and ends connections with `4001`, a missing room is `404`, another origin is `403` |
 | Limits | 10 wrong codes block the address (HTTP and WebSocket), 12 room creations per minute, a separate limit per user behind a proxy |
 
 ## Installing on a phone (PWA)

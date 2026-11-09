@@ -139,6 +139,22 @@ Ciemna plakietka na dole (`--ink` na `--paper`), akcja („Cofnij") w kolorze `-
 ### Baner błędu (`.offline`)
 Pasek `--danger` pod nagłówkiem. „Pokój wygasł" ma dwa przyciski obrysowane (Pobierz, Na start).
 
+### Menu pokoju (`.menu`)
+Ikona ⋯ w pasku otwiera listę pod przyciskiem (min. 17,5 rem, `white-space: nowrap`, jeden wiersz na pozycję,
+wysokość pozycji 38 px). Tło `--card`, cienka ramka `--line`, jedyny cień w całej aplikacji — bo to jedyny
+element, który leży *nad* treścią. Pozycja destrukcyjna („Zamknij pokój dla wszystkich") jest na dole,
+oddzielona linią, w kolorze `--danger`.
+
+### Okno dialogowe (`.dialog`)
+Wyśrodkowana karta `--card`, szerokość do 24 rem, promień 14 px, nad tłem `--ink` z 45% przezroczystości.
+Jeden przycisk główny (`.btn-primary`) albo jeden destrukcyjny (`.btn-danger`: wypełnienie `--danger`,
+tekst biały w jasnym i ciemny `#141A22` w ciemnym motywie). Fokus startuje na bezpiecznej akcji
+(„Anuluj", „Gotowe"), nigdy na destrukcyjnej.
+
+### Kod QR (`.qr`)
+Zawsze na **białej** karcie z ciemnym wzorem (`#18212C`), niezależnie od motywu — skanery wymagają
+kontrastu i jasnej ramki. Pod kodem ten sam kod pokoju drukowanymi znakami (1,6 rem, 750).
+
 ### Zasłona „Ukryj" (`.cover`)
 Czysto biała, `position: fixed; inset: 0`, `z-index: 100`. **Zawsze biała**, także w ciemnym
 motywie — ma wyglądać jak pusta strona, a nie jak aplikacja z wyłączonym ekranem.
@@ -171,3 +187,5 @@ Prawie żaden. Jedyne przejście to `background-color 0.12s` na przyciskach (tyl
 - ❌ Fontów bez `latin-ext`.
 - ❌ Zapisywania preferencji w `localStorage` (patrz `CLAUDE.md`, zasada 4).
 - ❌ Nowych kolorów osób poza ośmioma wyżej.
+- ❌ Cieni poza menu pokoju.
+- ❌ Destrukcyjnej akcji bez okna potwierdzenia i bez możliwości pobrania notatek przed nią.

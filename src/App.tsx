@@ -1,11 +1,13 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import Home from './Home'
+import Privacy from './Privacy'
 
 // edytor ładuje się dopiero w pokoju, strona startowa zostaje lekka
 const Room = lazy(() => import('./Room'))
 
 export function navigate(to: string) {
   history.pushState({}, '', to)
+  window.scrollTo(0, 0)
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
@@ -21,6 +23,7 @@ function useLocation() {
 
 export default function App() {
   const { path, search } = useLocation()
+  if (path === '/prywatnosc') return <Privacy />
   const m = path.match(/^\/([A-Za-z0-9]{6})\/?$/)
   if (m) {
     const mini = new URLSearchParams(search).get('mini') === '1'

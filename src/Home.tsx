@@ -81,6 +81,18 @@ export default function Home() {
         <li>Pokój znika po 12 godzinach bez ruchu.</li>
         <li>Okno można zmniejszyć do małego, pływającego nad innymi.</li>
       </ul>
+
+      <p className="foot">
+        <a
+          href="/prywatnosc"
+          onClick={(e) => {
+            e.preventDefault()
+            navigate('/prywatnosc')
+          }}
+        >
+          Prywatność
+        </a>
+      </p>
     </main>
   )
 }

@@ -10,7 +10,8 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import { navigate } from './App'
 import { Identity, loadIdentity, saveIdentity } from './identity'
-import { IcBack, IcDownload, IcHide, IcMini, IcSend, IcTimer, IcTrash } from './icons'
+import { IcBack, IcClose, IcDownload, IcHide, IcLink, IcMini, IcQr, IcRedo, IcSend, IcTimer, IcTrash, IcUndo } from './icons'
+import { CloseRoomDialog, MenuItem, QrDialog, RoomMenu } from './RoomMenu'
 
 type Conn = { ydoc: Y.Doc; provider: WebsocketProvider }
 type ChatMsg = { id: string; by: number; name: string; color: string; text: string; t: number }
@@ -174,7 +175,10 @@ function Workspace(props: {
 
   const [tab, setTab] = useState<'notes' | 'chat'>('notes')
   const [status, setStatus] = useState<Status>(provider.wsconnected ? 'connected' : 'connecting')
-  const [expired, setExpired] = useState(false)
+  const [ended, setEnded] = useState<null | 'expired' | 'closed'>(null)
+  const expired = ended !== null
+  const [dialog, setDialog] = useState<null | 'qr' | 'close'>(null)
+  const [closing, setClosing] = useState(false)
   const [lost, setLost] = useState(false)
   const [peers, setPeers] = useState<{ id: number; name: string; color: string }[]>([])
   const [msgs, setMsgs] = useState<ChatMsg[]>([])
@@ -232,7 +236,7 @@ function Workspace(props: {
         const r = await fetch(`/api/rooms/${code}`, { cache: 'no-store' })
         if (!stop && r.status === 404) {
           provider.disconnect()
-          setExpired(true)
+          setEnded('expired')
         }
       } catch {
         /* brak sieci – próbujemy dalej */
@@ -246,6 +250,18 @@ function Workspace(props: {
       window.clearInterval(again)
     }
   }, [status, expired, code, provider])
+
+  // ktoś zamknął pokój dla wszystkich: serwer kończy połączenia kodem 4001
+  useEffect(() => {
+    const onClose = (e: CloseEvent | null) => {
+      if (e && e.code === 4001) {
+        provider.disconnect()
+        setEnded('closed')
+      }
+    }
+    provider.on('connection-close', onClose as any)
+    return () => provider.off('connection-close', onClose as any)
+  }, [provider])
 
   // czat + ustawienia
   useEffect(() => {
@@ -338,6 +354,19 @@ function Workspace(props: {
     say(next ? 'Wiadomości znikają po 10 minutach.' : 'Wiadomości zostają do wyczyszczenia.')
   }
 
+  async function closeRoomForAll() {
+    setClosing(true)
+    try {
+      const r = await fetch(`/api/rooms/${code}`, { method: 'DELETE' })
+      if (!r.ok && r.status !== 404) throw new Error('nie udało się')
+      setDialog(null)
+    } catch {
+      say('Nie udało się zamknąć pokoju. Spróbuj jeszcze raz.')
+    } finally {
+      setClosing(false)
+    }
+  }
+
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(`${location.origin}/${code}`)
@@ -360,6 +389,13 @@ function Workspace(props: {
     setTimeout(() => URL.revokeObjectURL(url), 2000)
   }
 
+  const menuItems: MenuItem[] = [
+    { label: 'Kod QR do pokoju', icon: <IcQr />, run: () => setDialog('qr') },
+    { label: 'Skopiuj link', icon: <IcLink />, run: copyLink },
+    { label: 'Pobierz notatki', icon: <IcDownload />, run: download },
+    { label: 'Zamknij pokój dla wszystkich', icon: <IcClose />, run: () => setDialog('close'), danger: true, separatorBefore: true },
+  ]
+
   const shown = peers.slice(0, 4)
   const more = peers.length - shown.length
 
@@ -379,9 +415,7 @@ function Workspace(props: {
           {more > 0 && <span className="avatar avatar-more">+{more}</span>}
         </div>
         <div className="spacer" />
-        <button className="icon-btn" onClick={download} aria-label="Pobierz notatki" title="Pobierz notatki">
-          <IcDownload />
-        </button>
+        <RoomMenu items={menuItems} />
         {canMini && (
           <button className="icon-btn" onClick={onMini} aria-label="Okno mini" title="Okno mini (pływa nad innymi)">
             <IcMini />
@@ -399,7 +433,7 @@ function Workspace(props: {
 
       {expired ? (
         <div className="offline expired" role="alert">
-          <span>Pokój wygasł. Pobierz notatki, zanim stąd wyjdziesz.</span>
+          <span>{ended === 'closed' ? 'Pokój został zamknięty.' : 'Pokój wygasł.'} Pobierz notatki, zanim stąd wyjdziesz.</span>
           <button onClick={download}>Pobierz</button>
           <button onClick={() => navigate('/')}>Na start</button>
         </div>
@@ -410,6 +444,12 @@ function Workspace(props: {
       <div className="panes">
         <section className="notes" aria-label="Notatki">
           <div className="toolbar" role="toolbar" aria-label="Formatowanie">
+            <Tool run={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()} label="Cofnij (Ctrl+Z)">
+              <IcUndo />
+            </Tool>
+            <Tool run={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()} label="Ponów (Ctrl+Y)">
+              <IcRedo />
+            </Tool>
             <Tool on={editor?.isActive('bold')} run={() => editor?.chain().focus().toggleBold().run()} label="Pogrubienie">
               <b>B</b>
             </Tool>
@@ -466,6 +506,11 @@ function Workspace(props: {
         </button>
       </nav>
 
+      {dialog === 'qr' && <QrDialog code={code} display={fmtCode(code)} onClose={() => setDialog(null)} onCopy={copyLink} />}
+      {dialog === 'close' && (
+        <CloseRoomDialog busy={closing} onClose={() => setDialog(null)} onConfirm={closeRoomForAll} onDownload={download} />
+      )}
+
       {toast && (
         <div className="toast" role="status">
           <span>{toast.text}</span>
@@ -480,10 +525,11 @@ function Workspace(props: {
 
 /* ------------------------- drobne komponenty ------------------------- */
 
-function Tool(p: { on?: boolean; run: () => void; label: string; children: ReactNode; marker?: boolean }) {
+function Tool(p: { on?: boolean; run: () => void; label: string; children: ReactNode; marker?: boolean; disabled?: boolean }) {
   return (
     <button
       className={`tool ${p.on ? 'on' : ''} ${p.marker ? 'tool-marker' : ''}`}
+      disabled={p.disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={p.run}
       aria-label={p.label}

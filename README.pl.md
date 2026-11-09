@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/WebSocket-realtime-E4002B" alt="WebSocket realtime" />
   <img src="https://img.shields.io/badge/PWA-instalowalna-5A0FC8?logo=pwa&logoColor=white" alt="PWA" />
   <img src="https://img.shields.io/badge/prywatność-bez_kont-22C55E" alt="Bez kont" />
-  <img src="https://img.shields.io/badge/testy-16-22C55E?logo=nodedotjs&logoColor=white" alt="16 testów" />
+  <img src="https://img.shields.io/badge/testy-19-22C55E?logo=nodedotjs&logoColor=white" alt="19 testów" />
 </p>
 
 ---
@@ -51,6 +51,14 @@ Aplikacja jest robiona pod salę wykładową, więc ma być **szybka, mała i dy
 |---|---|
 | ![Ekran startowy](docs/screenshots/start.png) | ![Pokój w jasnym motywie](docs/screenshots/pokoj-jasny.png) |
 
+### Menu pokoju i kod QR
+
+Pokazujesz ekran, wszyscy skanują. Menu (⋯) jest takie samo w dużym oknie i w oknie mini.
+
+| Kod QR | Menu w oknie mini |
+|---|---|
+| ![Okno z kodem QR](docs/screenshots/qr.png) | ![Menu pokoju w oknie mini](docs/screenshots/menu-mini.png) |
+
 ### Ciemny motyw
 
 Interfejs idzie za motywem systemu. Nic nie trzeba ustawiać ani przełączać.
@@ -74,11 +82,14 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 - **Kod albo link** - `notas.pl/K7M2QX` wchodzi prosto do pokoju; plakietka z kodem w rogu kopiuje link
 - **Pokoje wygasają** - 12 godzin bez ruchu i pokój znika razem z notatkami i czatem
 - **Do 30 osób** w pokoju
+- **Kod QR** - jedno kliknięcie w menu pokazuje kod do zeskanowania, przydatne, gdy pokój wisi na projektorze
+- **Zamknij pokój dla wszystkich** - po potwierdzeniu notatki i czat znikają z serwera od razu. Wszyscy, którzy jeszcze są w pokoju, widzą „Pokój został zamknięty” i mogą wcześniej pobrać notatki
 
 ### Edytor
 - **Pisanie na żywo** - równoczesne zmiany łączą się, zamiast się nadpisywać (Yjs, czyli CRDT)
 - **Kursory i zaznaczenia** innych osób, podpisane pseudonimami
 - **Formatowanie** - pogrubienie, kursywa, nagłówki, listy punktowane i numerowane oraz **zakreślacz**
+- **Cofnij i ponów** - `Ctrl+Z` cofa tylko *Twoje* zmiany, nigdy cudze; przyciski dla telefonów bez klawiatury
 - **Pobieranie** - notatki jako samodzielny plik `.html`, bo pokój nie będzie istniał wiecznie
 
 ### Czat
@@ -106,6 +117,7 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 - **WebSockety tylko z własnej domeny** - połączenie z cudzej strony jest odrzucane (`403`)
 - **Restrykcyjna polityka CSP**, `no-referrer`, `noindex`, zakaz osadzania w ramkach
 - **Bez analityki i bez logów treści**
+- **Strona prywatności** (`/prywatnosc`), która prostym językiem mówi, co serwer widzi, a czego nie
 - **Treść żyje tylko w pamięci serwera** - nic nie trafia na dysk ani do bazy danych
 
 ### PWA
@@ -120,9 +132,10 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 | Edytor | [TipTap](https://tiptap.dev/) 3 (ProseMirror) z rozszerzeniami Collaboration i Collaboration Caret |
 | Synchronizacja | [Yjs](https://yjs.dev/) (CRDT) przez WebSockety, `y-websocket` |
 | Serwer | Node.js 22, zwykły `http` + [`ws`](https://github.com/websockets/ws), bez frameworka |
+| Kod QR | [`qrcode`](https://github.com/soldair/node-qrcode) (SVG, ładowany dopiero przy otwarciu okna) |
 | Style | Ręcznie pisany CSS - tokeny, container queries, bez frameworka |
 | Fonty | Schibsted Grotesk (hostowany lokalnie przez Fontsource) |
-| Testy | `node:test` (16 testów, każdy zestaw uruchamia prawdziwy proces serwera) |
+| Testy | `node:test` (19 testów, każdy zestaw uruchamia prawdziwy proces serwera) |
 | CI | GitHub Actions (typy + testy) |
 | Wdrożenie | Docker; Render Blueprint (`render.yaml`) albo Fly.io (`fly.toml`) |
 
@@ -131,20 +144,22 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 ```
 server/
 ├── index.js                # jeden proces: API HTTP, pliki statyczne, WebSocket, pokoje, limity, sprzątanie
-└── server.test.js          # 16 testów, prawdziwy proces serwera dla każdego zestawu
+└── server.test.js          # 19 testów, prawdziwy proces serwera dla każdego zestawu
 
 src/
 ├── main.tsx                # wejście: fonty, style, service worker (tylko produkcja)
 ├── App.tsx                 # malutki router (/ i /:kod), pokój ładowany leniwie
 ├── Home.tsx                # ekran startowy: załóż pokój albo wpisz kod
 ├── Room.tsx                # pokój: provider Yjs, obszar roboczy, czat, okno mini, ukrywanie
+├── RoomMenu.tsx            # menu pokoju (⋯), okna: kod QR i zamknięcie pokoju
+├── Privacy.tsx             # strona prywatności
 ├── identity.ts             # losowy pseudonim + kolor, trzymane w karcie (sessionStorage)
 ├── icons.tsx               # ikony SVG inline
 └── styles.css              # tokeny, jasny i ciemny motyw, container queries
 
 public/                     # manifest, service worker, ikony
 docs/screenshots/           # zrzuty do README
-Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml
+Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml · keepalive.yml
 ```
 
 ### Kluczowe decyzje projektowe
@@ -157,6 +172,8 @@ Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml
 - **Okno mini to to samo drzewo Reacta** - dla Document Picture-in-Picture cały obszar roboczy renderuje się przez portal do pływającego okna, ze skopiowanymi stylami. Edytor montuje się tam od nowa, ale dokument Yjs zostaje nietknięty, więc nic nie ginie po drodze.
 - **Układ z container queries, nie z media queries** - pokój reaguje na szerokość okna, w którym jest. Pływające okno 380 px, wyskakujące okienko i telefon dostają ten sam układ z zakładkami z jednej reguły, bez wykrywania urządzenia.
 - **Ukrywanie to nie tylko zasłona** - gdy ekran jest ukryty, edytor jest tylko do odczytu, a pole czatu wyłączone, bo biała strona, w którą dalej można pisać, jest gorsza niż brak ukrywania.
+- **Zamknięcie pokoju to uprawnienie wynikające z kodu** - kto zna kod, już teraz może wszystko przeczytać i skasować, więc zamknięcie nie wymaga niczego więcej. Serwer kończy wszystkie połączenia własnym kodem `4001`, który klient odczytuje jako „zamknięto celowo”, a nie „serwer zniknął”, żeby komunikat mówił prawdę o tym, co się stało.
+- **Cofanie jest osobne dla każdego** - edytor używa menedżera cofania z Yjs, a nie historii ProseMirror. `Ctrl+Z` cofa tylko Twoje zmiany; we wspólnym dokumencie globalne cofanie wycinałoby to, co ktoś inny właśnie napisał.
 - **Edytor ładuje się dopiero w pokoju** - ekran startowy waży ~48 KB po kompresji, a kawałek z edytorem dociąga się w drodze do pokoju.
 - **Serwer podaje też front** - na produkcji ten sam proces serwuje `dist/` i WebSockety, w developmencie Vite działa w nim jako middleware. Jeden port, bez CORS, jedna rzecz do wdrożenia.
 
@@ -178,7 +195,7 @@ npm run dev          # http://localhost:8787 (Vite działa w serwerze)
 npm run build        # buduje front do dist/
 npm start            # produkcja: serwer i dist/ na jednym porcie
 npm run typecheck    # tsc --noEmit
-npm test             # buduje, potem odpala 16 testów serwera
+npm test             # buduje, potem odpala 19 testów serwera
 ```
 
 Zmienne środowiskowe (`PORT`, `TRUST_PROXY`, `ROOM_TTL_HOURS`) opisuje [`.env.example`](.env.example).
@@ -206,11 +223,11 @@ fly deploy
 Dotyczy obu:
 - **Uruchom dokładnie jedną instancję.** Pokoje żyją w pamięci jednego procesu.
 - **Wdrożenie albo restart kończy wszystkie pokoje.** Ludzie zobaczą „Pokój wygasł” i mogą pobrać notatki.
-- **Darmowy plan Render usypia** usługę po ok. 15 minutach bez ruchu, co też kończy pokoje. Płatny plan `starter` nie usypia.
+- **Darmowy plan Render usypia** usługę po ok. 15 minutach bez ruchu, co też kończy pokoje. Płatny plan `starter` nie usypia. [`keepalive.yml`](.github/workflows/keepalive.yml) pinguje `/healthz` co 10 minut w ciągu dnia (ok. 6:00-22:00 czasu polskiego) z GitHub Actions, żeby pokoje przetrwały wykład; adres zmienisz zmienną repozytorium `NOTAS_URL`. GitHub bywa spóźniony z uruchamianiem zaplanowanych zadań i wstrzymuje je po 60 dniach bez aktywności w repo, więc to łagodzenie problemu, a nie gwarancja.
 
 ## Testy
 
-`npm test` buduje front i odpala 16 testów `node:test`. Każdy zestaw uruchamia **prawdziwy proces
+`npm test` buduje front i odpala 19 testów `node:test`. Każdy zestaw uruchamia **prawdziwy proces
 serwera** na wolnym porcie i rozmawia z nim przez HTTP i WebSockety, więc testowane jest to, co działa na produkcji.
 
 | Obszar | Co jest sprawdzane |
@@ -219,6 +236,7 @@ serwera** na wolnym porcie i rozmawia z nim przez HTTP i WebSockety, więc testo
 | Statyka | nagłówki bezpieczeństwa, fallback SPA dla linków do pokoi, path traversal, manifest PWA |
 | WebSocket | wejście do pokoju, odrzucenie nieistniejącego (`404`), odrzucenie obcej domeny (`403`) |
 | Synchronizacja | dwóch klientów widzi swój tekst i czat, nowa osoba dostaje to, co już napisano, pokoje są odizolowane |
+| Zamykanie | `DELETE` zamyka pokój i kończy połączenia kodem `4001`, brak pokoju to `404`, obca domena to `403` |
 | Limity | 10 błędnych kodów blokuje adres (HTTP i WebSocket), 12 pokoi na minutę, osobny limit dla każdego za proxy |
 
 ## Instalacja na telefonie (PWA)

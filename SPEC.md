@@ -23,7 +23,10 @@ załączniki, głos i wideo, edycja w trybie offline z późniejszą synchroniza
 3. Pseudonim losowy, zmienialny jednym kliknięciem.
 4. **Okno mini** wyciąga pokój do małego, pływającego okna.
 5. **Ukryj (`Esc`)** zasłania ekran białą stroną; `Esc` lub kliknięcie przywraca.
-6. Po 12 godzinach bez ruchu (albo po restarcie serwera) pokój znika — klient pokazuje baner
+6. **Menu pokoju (⋯)**: kod QR, skopiuj link, pobierz notatki, zamknij pokój dla wszystkich.
+7. **Zamknij pokój** wymaga potwierdzenia; po nim treść znika z serwera, a wszyscy w pokoju widzą baner
+   „Pokój został zamknięty" z przyciskami **Pobierz** i **Na start**.
+8. Po 12 godzinach bez ruchu (albo po restarcie serwera) pokój znika — klient pokazuje baner
    „Pokój wygasł" z przyciskami **Pobierz** i **Na start**.
 
 ## 3. Model pokoju
@@ -55,6 +58,7 @@ Czat jest przycinany do 200 ostatnich wiadomości.
 | `GET /healthz` | `200 {"ok":true}` |
 | `POST /api/rooms` | `201 {"code":"K7M2QX"}`; `429` przy limicie; `503` gdy brak miejsca |
 | `GET /api/rooms/:kod` | `200 {"ok":true,"people":n}`; `404` dla nieistniejącego lub błędnego kodu; `429` przy blokadzie |
+| `DELETE /api/rooms/:kod` | `200 {"ok":true}` i zamknięcie pokoju: każde połączenie kończy się kodem WebSocket **4001**, kod przestaje istnieć; `404` brak pokoju; `403` obca domena (`Origin`); `429` blokada |
 | `WS /ws/:kod` | protokół `y-websocket`; `404` brak pokoju, `403` obca domena (`Origin`), `429` blokada, `503` pokój pełny |
 | `GET /*` | pliki z `dist/`; ścieżka bez rozszerzenia → `index.html` (linki do pokoi) |
 
@@ -64,7 +68,7 @@ Wszystkie odpowiedzi API mają `Cache-Control: no-store`. Kod w ścieżce jest n
 
 | Mechanizm | Wartość |
 |---|---|
-| Błędne kody (HTTP i WS) | 10 na minutę na adres → blokada 5 min |
+| Błędne kody (HTTP, WS i `DELETE`) | 10 na minutę na adres → blokada 5 min |
 | Zakładanie pokoi | 12 na minutę na adres → blokada 2 min |
 | `Origin` WebSocketu | musi zgadzać się z nagłówkiem `Host` |
 | CSP (produkcja) | `default-src 'self'; connect-src 'self' ws: wss:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'` |
@@ -75,8 +79,13 @@ Wszystkie odpowiedzi API mają `Cache-Control: no-store`. Kod w ścieżce jest n
 ## 6. Interfejs
 
 - **Start:** nagłówek, przycisk „Utwórz pokój", pole kodu, cztery zdania o prywatności.
-- **Pokój:** pasek (kod-plakietka kopiująca link, obecni, pobierz, okno mini, ukryj), pasek
-  formatowania, edytor, czat (pseudonim, znikające wiadomości, wyczyść, lista, pole).
+- **Pokój:** pasek (kod-plakietka kopiująca link, obecni, menu ⋯, okno mini, ukryj), pasek
+  formatowania (cofnij, ponów, pogrubienie, kursywa, zakreślacz, nagłówek, listy), edytor,
+  czat (pseudonim, znikające wiadomości, wyczyść, lista, pole).
+- **Cofanie:** `Ctrl+Z` / `Ctrl+Y` cofają i ponawiają wyłącznie zmiany **tej osoby** (menedżer cofania Yjs);
+  przyciski w pasku formatowania robią to samo na telefonie.
+- **Kod QR:** okno z kodem QR (SVG, biała karta niezależnie od motywu), kodem pokoju i przyciskiem „Skopiuj link".
+- **Strona `/prywatnosc`:** opis tego, co serwer widzi i czego nie. Zmiana działania serwera wymaga zmiany tego tekstu.
 - **Układ:** dwie kolumny od 720 px szerokości *okna* (container query), poniżej zakładki.
 - **Okno mini:** Document Picture-in-Picture 380 × 540 w Chrome i Edge; w pozostałych
   przeglądarkach wyskakujące okno z adresem `/KOD?mini=1`.
@@ -97,6 +106,7 @@ Wszystkie odpowiedzi API mają `Cache-Control: no-store`. Kod w ścieżce jest n
 - [x] Okno mini, ukrywanie, czyszczenie czatu, znikające wiadomości
 - [x] Limity, CSP, wygasanie, PWA, TipTap 3, testy serwera, CI
 - [x] Wdrożenie na Render
+- [x] Cofnij / ponów, menu pokoju, kod QR, „Zamknij pokój dla wszystkich", strona Prywatność
+- [x] Podtrzymywanie serwera w ciągu dnia (workflow `keepalive.yml`)
 - [ ] Domena notas.pl
-- [ ] „Zamknij pokój dla wszystkich"
 - [ ] Testy interfejsu

@@ -126,6 +126,7 @@ describe('pokoje i strona', () => {
     const r = await fetch(`${srv.base}/ABC234`)
     assert.equal(r.status, 200)
     assert.match(r.headers.get('content-type'), /text\/html/)
+    assert.equal((await fetch(`${srv.base}/prywatnosc`)).status, 200, 'strona Prywatność')
     assert.equal((await fetch(`${srv.base}/nie-ma-takiego.js`)).status, 404)
   })
 
@@ -199,6 +200,37 @@ describe('WebSocket i synchronizacja', () => {
     await new Promise((r) => setTimeout(r, 400))
     assert.equal(b.doc.getText('notatki').toString(), '')
     a.close(); b.close()
+  })
+})
+
+describe('zamykanie pokoju', () => {
+  let srv
+  before(async () => { srv = await startServer() })
+  after(() => srv.stop())
+
+  test('DELETE zamyka pokój: osoba w środku dostaje kod 4001, a kod przestaje działać', async () => {
+    const code = await createRoom(srv.base)
+    let deleteStatus
+    const closeCode = await new Promise((resolve) => {
+      const ws = new WebSocket(`ws://${srv.host}/ws/${code}`, { headers: { Origin: `http://${srv.host}` } })
+      ws.on('open', () => fetch(`${srv.base}/api/rooms/${code}`, { method: 'DELETE' }).then((r) => { deleteStatus = r.status }))
+      ws.on('close', (c) => resolve(c))
+    })
+    assert.equal(deleteStatus, 200)
+    assert.equal(closeCode, 4001)
+    assert.equal((await fetch(`${srv.base}/api/rooms/${code}`)).status, 404)
+    assert.deepEqual(await tryWs(srv, code), { ok: false, status: 404 }, 'do zamkniętego pokoju nie da się wejść')
+  })
+
+  test('DELETE nieistniejącego pokoju: 404', async () => {
+    assert.equal((await fetch(`${srv.base}/api/rooms/ZZZZZZ`, { method: 'DELETE' })).status, 404)
+  })
+
+  test('DELETE z obcej domeny jest odrzucany (403), pokój zostaje', async () => {
+    const code = await createRoom(srv.base)
+    const r = await fetch(`${srv.base}/api/rooms/${code}`, { method: 'DELETE', headers: { Origin: 'https://obcy.example' } })
+    assert.equal(r.status, 403)
+    assert.equal((await fetch(`${srv.base}/api/rooms/${code}`)).status, 200)
   })
 })
 
