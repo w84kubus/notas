@@ -80,22 +80,28 @@ function roomPeople(code) {
   return d ? d.conns.size : 0
 }
 
-// Zamknięcie pokoju na życzenie uczestnika: wszyscy dostają kod 4001, treść znika z pamięci.
+// Zamknięcie pokoju na życzenie uczestnika.
+// Sygnał „zamknięto" idzie DWOMA drogami: znacznikiem w dokumencie Yjs (dociera do każdego zwykłym
+// kanałem synchronizacji, także przez proxy hostingu) oraz kodem 4001 przy zamknięciu połączenia.
+// Sam kod 4001 nie wystarcza: proxy Render nie przekazuje go klientom, połączenie ginie po ok. 20 s jako 1006.
 const CLOSE_CODE = 4001
 function closeRoom(code) {
   rooms.delete(code) // od tej chwili nikt nie wejdzie
   const doc = docs.get(code)
   if (!doc) return
-  for (const conn of [...doc.conns.keys()]) {
-    try {
-      conn.close(CLOSE_CODE, 'room closed')
-    } catch {}
-  }
-  // chwila na zamknięcie połączeń, dopiero potem niszczymy dokument
+  doc.transact(() => doc.getMap('settings').set('closed', true))
+  // chwila, żeby znacznik zdążył dojść do wszystkich, potem kończymy połączenia i kasujemy treść
   setTimeout(() => {
-    if (docs.get(code) === doc) docs.delete(code)
-    doc.destroy()
-  }, 200).unref()
+    for (const conn of [...doc.conns.keys()]) {
+      try {
+        conn.close(CLOSE_CODE, 'room closed')
+      } catch {}
+    }
+    setTimeout(() => {
+      if (docs.get(code) === doc) docs.delete(code)
+      doc.destroy()
+    }, 200).unref()
+  }, 400).unref()
 }
 
 function sameOrigin(req) {

@@ -266,7 +266,14 @@ function Workspace(props: {
   // czat + ustawienia
   useEffect(() => {
     const sync = () => setMsgs(chat.toArray())
-    const syncS = () => setEphemeral(!!settings.get('ephemeral'))
+    const syncS = () => {
+      setEphemeral(!!settings.get('ephemeral'))
+      // serwer wpisuje `closed`, gdy ktoś zamknął pokój (kod 4001 nie przechodzi przez proxy hostingu)
+      if (settings.get('closed')) {
+        provider.disconnect()
+        setEnded('closed')
+      }
+    }
     chat.observe(sync)
     settings.observe(syncS)
     sync()
@@ -275,7 +282,7 @@ function Workspace(props: {
       chat.unobserve(sync)
       settings.unobserve(syncS)
     }
-  }, [chat, settings])
+  }, [chat, settings, provider])
 
   // znikające wiadomości: ukrywamy od razu, usuwamy z dokumentu co jakiś czas
   useEffect(() => {

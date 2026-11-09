@@ -46,7 +46,7 @@ Pokój = wpis w pamięci serwera + dokument Yjs. Nic nie jest zapisywane trwale.
 |---|---|---|
 | `default` | `Y.XmlFragment` | treść edytora TipTap |
 | `chat` | `Y.Array<ChatMsg>` | wiadomości: `id`, `by` (clientID), `name`, `color`, `text` (≤ 500 znaków), `t` (ms) |
-| `settings` | `Y.Map` | `ephemeral: boolean` — znikające wiadomości |
+| `settings` | `Y.Map` | `ephemeral: boolean` — znikające wiadomości; `closed: boolean` — ustawia **serwer** przy zamknięciu pokoju |
 
 Obecność i kursory to **awareness** Yjs: `user: { name, color }` oraz zaznaczenie edytora.
 Czat jest przycinany do 200 ostatnich wiadomości.
@@ -58,7 +58,7 @@ Czat jest przycinany do 200 ostatnich wiadomości.
 | `GET /healthz` | `200 {"ok":true}` |
 | `POST /api/rooms` | `201 {"code":"K7M2QX"}`; `429` przy limicie; `503` gdy brak miejsca |
 | `GET /api/rooms/:kod` | `200 {"ok":true,"people":n}`; `404` dla nieistniejącego lub błędnego kodu; `429` przy blokadzie |
-| `DELETE /api/rooms/:kod` | `200 {"ok":true}` i zamknięcie pokoju: każde połączenie kończy się kodem WebSocket **4001**, kod przestaje istnieć; `404` brak pokoju; `403` obca domena (`Origin`); `429` blokada |
+| `DELETE /api/rooms/:kod` | `200 {"ok":true}` i zamknięcie pokoju: serwer wpisuje `closed: true` do mapy `settings` dokumentu (to niezawodny sygnał dla klientów), po ok. 0,4 s kończy każde połączenie kodem WebSocket **4001** i kasuje treść; kod przestaje istnieć natychmiast; `404` brak pokoju; `403` obca domena (`Origin`); `429` blokada |
 | `WS /ws/:kod` | protokół `y-websocket`; `404` brak pokoju, `403` obca domena (`Origin`), `429` blokada, `503` pokój pełny |
 | `GET /*` | pliki z `dist/`; ścieżka bez rozszerzenia → `index.html` (linki do pokoi) |
 

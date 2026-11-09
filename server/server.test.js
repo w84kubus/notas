@@ -222,6 +222,15 @@ describe('zamykanie pokoju', () => {
     assert.deepEqual(await tryWs(srv, code), { ok: false, status: 404 }, 'do zamkniętego pokoju nie da się wejść')
   })
 
+  test('DELETE wpisuje znacznik „closed" do dokumentu, więc dociera do klientów bez kodu 4001', async () => {
+    const code = await createRoom(srv.base)
+    const a = client(srv, code)
+    await a.synced
+    assert.equal((await fetch(`${srv.base}/api/rooms/${code}`, { method: 'DELETE' })).status, 200)
+    assert.ok(await waitFor(() => a.doc.getMap('settings').get('closed') === true), 'klient nie dostał znacznika zamknięcia')
+    a.close()
+  })
+
   test('DELETE nieistniejącego pokoju: 404', async () => {
     assert.equal((await fetch(`${srv.base}/api/rooms/ZZZZZZ`, { method: 'DELETE' })).status, 404)
   })

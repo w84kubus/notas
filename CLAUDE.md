@@ -65,7 +65,7 @@ npm run dev          # http://localhost:8787 (Vite wbudowany w serwer)
 npm run build
 npm start            # produkcja: serwer + dist/
 npm run typecheck
-npm test             # build, potem 19 testów serwera
+npm test             # build, potem 20 testów serwera
 ```
 
 Podgląd w aplikacji: konfiguracje `notas` (dev, port 8787) i `notas-prod` (port 8791)
@@ -93,12 +93,17 @@ w `.claude/launch.json` folderu nadrzędnego.
 
 ## Konwencje, które łatwo przeoczyć
 
-### Zamknięcie pokoju: kod 4001
+### Zamknięcie pokoju: znacznik `closed`, nie tylko kod 4001
 
-`DELETE /api/rooms/:kod` zamyka pokój: serwer kończy KAŻDE połączenie kodem WebSocket **4001**,
-usuwa pokój z rejestru od razu, a dokument niszczy po 200 ms (żeby połączenia zdążyły się zamknąć).
-Klient rozpoznaje 4001 w zdarzeniu `connection-close` i pokazuje „Pokój został zamknięty", a nie
-„Pokój wygasł" — to dwa różne komunikaty o dwóch różnych sytuacjach. Zamknąć może każdy, kto zna kod
+`DELETE /api/rooms/:kod` usuwa pokój z rejestru od razu, **wpisuje `closed: true` do mapy `settings`
+dokumentu Yjs** (klienci dostają to zwykłą synchronizacją), po 0,4 s kończy połączenia kodem 4001
+i niszczy dokument. Klient pokazuje „Pokój został zamknięty", a nie „Pokój wygasł" — to dwa różne
+komunikaty o dwóch różnych sytuacjach.
+
+**Sam kod 4001 nie wystarcza.** Zmierzone na Render: proxy hostingu nie przekazuje klientowi własnego
+kodu zamknięcia, połączenie ginie dopiero po ok. 20 s jako `1006`, więc ludzie zobaczyliby „wygasł" z dużym
+opóźnieniem. Lokalnie 4001 działał, więc test lokalny tego nie wychwycił. **Sygnały dla klientów puszczaj
+kanałem dokumentu, nie kodami WebSocket**, i sprawdzaj je na produkcji. Zamknąć może każdy, kto zna kod
 (kod i tak daje pełny dostęp do treści); okno potwierdzenia jest jedyną ochroną przed przypadkiem.
 
 ### Esc w menu i oknach
@@ -128,6 +133,16 @@ gdy nie ma co cofać. Nie przechodź na globalne cofanie.
 Adres bierze ze zmiennej repozytorium `NOTAS_URL`; po podpięciu domeny zmień zmienną, nie kod.
 GitHub bywa spóźniony i wstrzymuje harmonogramy po 60 dniach bez aktywności w repo — to łagodzenie
 usypiania na darmowym planie, nie gwarancja.
+
+### Render: brak automatycznych wdrożeń po pushu
+
+Usługa powstała z **publicznego adresu repo** (przycisk „Deploy to Render"), a nie przez aplikację GitHub
+Render, więc Render **nie dostaje powiadomień o pushach**, mimo `autoDeploy: true` i „Auto-Deploy: On Commit".
+Objaw: w Events tylko pierwsze wdrożenie, produkcja stoi na starej wersji, a CI na GitHubie jest zielone.
+Wdrożenie ręczne: Render → notas → Manual Deploy → Deploy latest commit. Trwałe naprawienie wymaga
+zainstalowania aplikacji Render na koncie GitHub i połączenia usługi z repo (decyzja Jakuba: to nadanie
+uprawnień zewnętrznej aplikacji). Po każdym pushu sprawdzaj, czy produkcja ma nowy bundle
+(`curl` strony głównej, nazwa pliku `index-*.js`).
 
 ### Hosting z WebSocketami — nie Vercel
 

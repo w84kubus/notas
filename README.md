@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/WebSocket-realtime-E4002B" alt="WebSocket realtime" />
   <img src="https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white" alt="PWA" />
   <img src="https://img.shields.io/badge/privacy-no_accounts-22C55E" alt="No accounts" />
-  <img src="https://img.shields.io/badge/tests-19-22C55E?logo=nodedotjs&logoColor=white" alt="19 tests" />
+  <img src="https://img.shields.io/badge/tests-20-22C55E?logo=nodedotjs&logoColor=white" alt="20 tests" />
 </p>
 
 ---
@@ -139,7 +139,7 @@ window width, not by the device, so the notes and the chat become two tabs.
 | QR code | [`qrcode`](https://github.com/soldair/node-qrcode) (SVG, loaded only when the dialog opens) |
 | Styling | Hand-written CSS - tokens, container queries, no framework |
 | Fonts | Schibsted Grotesk (self-hosted via Fontsource) |
-| Tests | `node:test` (19 tests, each suite runs a real server process) |
+| Tests | `node:test` (20 tests, each suite runs a real server process) |
 | CI | GitHub Actions (type check + tests) |
 | Deploy | Docker; Render Blueprint (`render.yaml`) or Fly.io (`fly.toml`) |
 
@@ -148,7 +148,7 @@ window width, not by the device, so the notes and the chat become two tabs.
 ```
 server/
 ├── index.js                # one process: HTTP API, static files, WebSocket, rooms, limits, sweep
-└── server.test.js          # 19 tests, a real server process per suite
+└── server.test.js          # 20 tests, a real server process per suite
 
 src/
 ├── main.tsx                # entry: fonts, styles, service worker (production only)
@@ -176,7 +176,7 @@ Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml · keepalive.y
 - **The mini window is the same React tree** - for Document Picture-in-Picture the whole workspace is rendered through a portal into the floating window, with the styles cloned across. The editor remounts there, but the Yjs document is untouched, so nothing is lost on the way.
 - **Layout from container queries, not media queries** - the room reacts to the width of the window it is in. A 380 px floating window, a pop-up and a phone all get the same tabbed layout from one rule, with no device detection.
 - **Hiding is not just a cover** - while hidden, the editor is read-only and the chat input is disabled, because a white page you can still type into is worse than no hiding at all.
-- **Closing a room is a capability of the code** - whoever knows the code can already read and wipe everything, so closing needs nothing more. The server ends every connection with the custom code `4001`, which the client reads as "closed on purpose" and not as "the server went away", so the message can be honest about which one happened.
+- **Closing a room is a capability of the code** - whoever knows the code can already read and wipe everything, so closing needs nothing more. The server writes a `closed` flag into the room's document, which reaches everyone through the normal sync channel, and then ends the connections with the code `4001`. Clients read it as "closed on purpose" and not as "the server went away", so the message can be honest about which one happened. The flag is the reliable signal: the hosting proxy does not pass custom close codes on, and without the flag people would see "expired" only after ~20 seconds.
 - **Undo is per person** - the editor uses Yjs's own undo manager, not ProseMirror's history. `Ctrl+Z` reverts only your own edits; in a shared document a global undo would erase what somebody else just wrote.
 - **The editor loads only inside a room** - the start screen is ~48 KB gzipped, the editor chunk arrives on the way into the room.
 - **The server serves the front too** - in production the same process serves `dist/` and the WebSockets, in development Vite runs inside it as middleware. One port, no CORS, one thing to deploy.
@@ -199,7 +199,7 @@ npm run dev          # http://localhost:8787 (Vite runs inside the server)
 npm run build        # builds the front into dist/
 npm start            # production: the server and dist/ on one port
 npm run typecheck    # tsc --noEmit
-npm test             # builds, then runs 19 server tests
+npm test             # builds, then runs 20 server tests
 ```
 
 Environment variables (`PORT`, `TRUST_PROXY`, `ROOM_TTL_HOURS`) are described in [`.env.example`](.env.example).
@@ -231,7 +231,7 @@ Things that apply to both:
 
 ## Tests
 
-`npm test` builds the front and runs 19 tests with `node:test`. Each suite starts a **real server
+`npm test` builds the front and runs 20 tests with `node:test`. Each suite starts a **real server
 process** on a free port and talks to it over HTTP and WebSockets, so what is tested is what is deployed.
 
 | Area | What is checked |
@@ -240,7 +240,7 @@ process** on a free port and talks to it over HTTP and WebSockets, so what is te
 | Static | security headers, SPA fallback for room links, path traversal, PWA manifest |
 | WebSocket | joining a room, refusing a missing room (`404`), refusing another origin (`403`) |
 | Sync | two clients see each other's text and chat, a newcomer gets what was already written, rooms are isolated |
-| Closing | `DELETE` closes the room and ends connections with `4001`, a missing room is `404`, another origin is `403` |
+| Closing | `DELETE` closes the room, sets the `closed` flag in the document and ends connections with `4001`; a missing room is `404`, another origin is `403` |
 | Limits | 10 wrong codes block the address (HTTP and WebSocket), 12 room creations per minute, a separate limit per user behind a proxy |
 
 ## Installing on a phone (PWA)

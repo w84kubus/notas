@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/WebSocket-realtime-E4002B" alt="WebSocket realtime" />
   <img src="https://img.shields.io/badge/PWA-instalowalna-5A0FC8?logo=pwa&logoColor=white" alt="PWA" />
   <img src="https://img.shields.io/badge/prywatność-bez_kont-22C55E" alt="Bez kont" />
-  <img src="https://img.shields.io/badge/testy-19-22C55E?logo=nodedotjs&logoColor=white" alt="19 testów" />
+  <img src="https://img.shields.io/badge/testy-20-22C55E?logo=nodedotjs&logoColor=white" alt="20 testów" />
 </p>
 
 ---
@@ -135,7 +135,7 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 | Kod QR | [`qrcode`](https://github.com/soldair/node-qrcode) (SVG, ładowany dopiero przy otwarciu okna) |
 | Style | Ręcznie pisany CSS - tokeny, container queries, bez frameworka |
 | Fonty | Schibsted Grotesk (hostowany lokalnie przez Fontsource) |
-| Testy | `node:test` (19 testów, każdy zestaw uruchamia prawdziwy proces serwera) |
+| Testy | `node:test` (20 testów, każdy zestaw uruchamia prawdziwy proces serwera) |
 | CI | GitHub Actions (typy + testy) |
 | Wdrożenie | Docker; Render Blueprint (`render.yaml`) albo Fly.io (`fly.toml`) |
 
@@ -144,7 +144,7 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 ```
 server/
 ├── index.js                # jeden proces: API HTTP, pliki statyczne, WebSocket, pokoje, limity, sprzątanie
-└── server.test.js          # 19 testów, prawdziwy proces serwera dla każdego zestawu
+└── server.test.js          # 20 testów, prawdziwy proces serwera dla każdego zestawu
 
 src/
 ├── main.tsx                # wejście: fonty, style, service worker (tylko produkcja)
@@ -172,7 +172,7 @@ Dockerfile · fly.toml · render.yaml · .github/workflows/ci.yml · keepalive.y
 - **Okno mini to to samo drzewo Reacta** - dla Document Picture-in-Picture cały obszar roboczy renderuje się przez portal do pływającego okna, ze skopiowanymi stylami. Edytor montuje się tam od nowa, ale dokument Yjs zostaje nietknięty, więc nic nie ginie po drodze.
 - **Układ z container queries, nie z media queries** - pokój reaguje na szerokość okna, w którym jest. Pływające okno 380 px, wyskakujące okienko i telefon dostają ten sam układ z zakładkami z jednej reguły, bez wykrywania urządzenia.
 - **Ukrywanie to nie tylko zasłona** - gdy ekran jest ukryty, edytor jest tylko do odczytu, a pole czatu wyłączone, bo biała strona, w którą dalej można pisać, jest gorsza niż brak ukrywania.
-- **Zamknięcie pokoju to uprawnienie wynikające z kodu** - kto zna kod, już teraz może wszystko przeczytać i skasować, więc zamknięcie nie wymaga niczego więcej. Serwer kończy wszystkie połączenia własnym kodem `4001`, który klient odczytuje jako „zamknięto celowo”, a nie „serwer zniknął”, żeby komunikat mówił prawdę o tym, co się stało.
+- **Zamknięcie pokoju to uprawnienie wynikające z kodu** - kto zna kod, już teraz może wszystko przeczytać i skasować, więc zamknięcie nie wymaga niczego więcej. Serwer wpisuje do dokumentu pokoju znacznik `closed`, który dociera do wszystkich zwykłym kanałem synchronizacji, a potem kończy połączenia kodem `4001`. Klient odczytuje to jako „zamknięto celowo”, a nie „serwer zniknął”, żeby komunikat mówił prawdę o tym, co się stało. Niezawodny jest znacznik: proxy hostingu nie przekazuje własnych kodów zamknięcia, więc bez niego ludzie zobaczyliby „wygasł” dopiero po ok. 20 sekundach.
 - **Cofanie jest osobne dla każdego** - edytor używa menedżera cofania z Yjs, a nie historii ProseMirror. `Ctrl+Z` cofa tylko Twoje zmiany; we wspólnym dokumencie globalne cofanie wycinałoby to, co ktoś inny właśnie napisał.
 - **Edytor ładuje się dopiero w pokoju** - ekran startowy waży ~48 KB po kompresji, a kawałek z edytorem dociąga się w drodze do pokoju.
 - **Serwer podaje też front** - na produkcji ten sam proces serwuje `dist/` i WebSockety, w developmencie Vite działa w nim jako middleware. Jeden port, bez CORS, jedna rzecz do wdrożenia.
@@ -195,7 +195,7 @@ npm run dev          # http://localhost:8787 (Vite działa w serwerze)
 npm run build        # buduje front do dist/
 npm start            # produkcja: serwer i dist/ na jednym porcie
 npm run typecheck    # tsc --noEmit
-npm test             # buduje, potem odpala 19 testów serwera
+npm test             # buduje, potem odpala 20 testów serwera
 ```
 
 Zmienne środowiskowe (`PORT`, `TRUST_PROXY`, `ROOM_TTL_HOURS`) opisuje [`.env.example`](.env.example).
@@ -227,7 +227,7 @@ Dotyczy obu:
 
 ## Testy
 
-`npm test` buduje front i odpala 19 testów `node:test`. Każdy zestaw uruchamia **prawdziwy proces
+`npm test` buduje front i odpala 20 testów `node:test`. Każdy zestaw uruchamia **prawdziwy proces
 serwera** na wolnym porcie i rozmawia z nim przez HTTP i WebSockety, więc testowane jest to, co działa na produkcji.
 
 | Obszar | Co jest sprawdzane |
@@ -236,7 +236,7 @@ serwera** na wolnym porcie i rozmawia z nim przez HTTP i WebSockety, więc testo
 | Statyka | nagłówki bezpieczeństwa, fallback SPA dla linków do pokoi, path traversal, manifest PWA |
 | WebSocket | wejście do pokoju, odrzucenie nieistniejącego (`404`), odrzucenie obcej domeny (`403`) |
 | Synchronizacja | dwóch klientów widzi swój tekst i czat, nowa osoba dostaje to, co już napisano, pokoje są odizolowane |
-| Zamykanie | `DELETE` zamyka pokój i kończy połączenia kodem `4001`, brak pokoju to `404`, obca domena to `403` |
+| Zamykanie | `DELETE` zamyka pokój, ustawia znacznik `closed` w dokumencie i kończy połączenia kodem `4001`; brak pokoju to `404`, obca domena to `403` |
 | Limity | 10 błędnych kodów blokuje adres (HTTP i WebSocket), 12 pokoi na minutę, osobny limit dla każdego za proxy |
 
 ## Instalacja na telefonie (PWA)
