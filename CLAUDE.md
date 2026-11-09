@@ -134,15 +134,17 @@ Adres bierze ze zmiennej repozytorium `NOTAS_URL`; po podpięciu domeny zmień z
 GitHub bywa spóźniony i wstrzymuje harmonogramy po 60 dniach bez aktywności w repo — to łagodzenie
 usypiania na darmowym planie, nie gwarancja.
 
-### Render: brak automatycznych wdrożeń po pushu
+### Render: automatyczne wdrożenia po pushu (naprawione 9.11.2026)
 
-Usługa powstała z **publicznego adresu repo** (przycisk „Deploy to Render"), a nie przez aplikację GitHub
-Render, więc Render **nie dostaje powiadomień o pushach**, mimo `autoDeploy: true` i „Auto-Deploy: On Commit".
-Objaw: w Events tylko pierwsze wdrożenie, produkcja stoi na starej wersji, a CI na GitHubie jest zielone.
-Wdrożenie ręczne: Render → notas → Manual Deploy → Deploy latest commit. Trwałe naprawienie wymaga
-zainstalowania aplikacji Render na koncie GitHub i połączenia usługi z repo (decyzja Jakuba: to nadanie
-uprawnień zewnętrznej aplikacji). Po każdym pushu sprawdzaj, czy produkcja ma nowy bundle
-(`curl` strony głównej, nazwa pliku `index-*.js`).
+Usługa powstała pierwotnie z **publicznego adresu repo** (przycisk „Deploy to Render"), więc Render nie dostawał
+powiadomień o pushach: w Events było tylko pierwsze wdrożenie, produkcja stała na starej wersji, a CI na GitHubie
+było zielone. Naprawa: zainstalowana aplikacja **Render** na koncie GitHub (`w84kubus`, dostęp **tylko do repo `notas`**)
+i źródło usługi przełączone w Settings → Build & Deploy → Source na repo z tej aplikacji (Git Provider).
+
+Po każdym pushu na `main` sprawdź w Render → notas → Events, że pojawiło się wdrożenie tego commita,
+a produkcja ma nowy bundle (`curl` strony głównej, nazwa pliku `index-*.js`). Gdyby znów zniknęło:
+Manual Deploy → Deploy latest commit, a potem sprawdź dostęp aplikacji Render do repo
+(GitHub → Settings → Applications → Render → Repository access). Pamiętaj, że każde wdrożenie kasuje wszystkie pokoje.
 
 ### Hosting z WebSocketami — nie Vercel
 
