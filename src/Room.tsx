@@ -11,10 +11,11 @@ import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import { navigate } from './App'
 import { Identity, loadIdentity, saveIdentity } from './identity'
 import {
-  IcBack, IcBullets, IcClose, IcCode, IcCodeBlock, IcDownload, IcHide, IcLink, IcMini, IcOrdered, IcQr, IcRedo, IcSend, IcStrike, IcTimer, IcTrash, IcUnderline, IcUndo,
+  IcBack, IcBullets, IcClose, IcCode, IcCodeBlock, IcDownload, IcFace, IcHide, IcLink, IcMini, IcOrdered, IcQr, IcRedo, IcSend, IcStrike, IcTimer, IcTrash, IcUnderline, IcUndo,
 } from './icons'
 import { SideCards } from './Side'
 import { Avatar } from './Avatar'
+import { AvatarDialog } from './AvatarDialog'
 import { CloseRoomDialog, MenuItem, QrDialog, RoomMenu } from './RoomMenu'
 
 type Conn = { ydoc: Y.Doc; provider: WebsocketProvider }
@@ -194,7 +195,7 @@ function Workspace(props: {
   const [status, setStatus] = useState<Status>(provider.wsconnected ? 'connected' : 'connecting')
   const [ended, setEnded] = useState<null | 'expired' | 'closed'>(null)
   const expired = ended !== null
-  const [dialog, setDialog] = useState<null | 'qr' | 'close'>(null)
+  const [dialog, setDialog] = useState<null | 'qr' | 'close' | 'avatar'>(null)
   const [closing, setClosing] = useState(false)
   const [lost, setLost] = useState(false)
   const [peers, setPeers] = useState<Peer[]>([])
@@ -441,6 +442,7 @@ function Workspace(props: {
   const menuItems: MenuItem[] = [
     { label: 'Kod QR do pokoju', icon: <IcQr />, run: () => setDialog('qr') },
     { label: 'Skopiuj link', icon: <IcLink />, run: copyLink },
+    { label: 'Zmień awatar', icon: <IcFace />, run: () => setDialog('avatar') },
     { label: 'Pobierz notatki', icon: <IcDownload />, run: download },
     { label: 'Zamknij pokój dla wszystkich', icon: <IcClose />, run: () => setDialog('close'), danger: true, separatorBefore: true },
   ]
@@ -570,6 +572,11 @@ function Workspace(props: {
                 </div>
               </div>
               <div className="me-row">
+                <button className="me-face" onClick={() => setDialog('avatar')} aria-label="Zmień awatar" title="Zmień awatar">
+                  <span className="face-box" style={{ width: 32, height: 32, '--c': identity.color } as CSSProperties}>
+                    <Avatar seed={identity.face} color={identity.color} name={identity.name} size={32} />
+                  </span>
+                </button>
                 <NameEditor identity={identity} onChange={onIdentity} />
               </div>
               <ChatList msgs={visible} me={ydoc.clientID} />
@@ -588,6 +595,17 @@ function Workspace(props: {
         </div>
       </div>
 
+      {dialog === 'avatar' && (
+        <AvatarDialog
+          identity={identity}
+          onClose={() => setDialog(null)}
+          onSave={(face, color) => {
+            onIdentity({ ...identity, face, color })
+            setDialog(null)
+            say('Awatar zmieniony.')
+          }}
+        />
+      )}
       {dialog === 'qr' && <QrDialog code={code} display={fmtCode(code)} onClose={() => setDialog(null)} onCopy={copyLink} />}
       {dialog === 'close' && (
         <CloseRoomDialog busy={closing} onClose={() => setDialog(null)} onConfirm={closeRoomForAll} onDownload={download} />

@@ -101,6 +101,7 @@ Show the screen, everyone scans. The code is violet-to-pink on a white card, so 
 ### Nicknames
 - **A random nickname** for every person (`Kruk 38`, `Wydra 12`), a colour and an illustrated avatar generated locally in your browser (no request to any avatar service)
 - **Change it in one click** - the field reminds you not to use your real name
+- **Edit your avatar** - click it in the chat (or use the room menu): pick a face from a grid, roll new ones, choose one of eight colours. Others see the change at once; older messages keep the old look
 - **Nothing remembered** - the nickname lives in that browser tab and goes with it
 
 ### Small, quick, discreet

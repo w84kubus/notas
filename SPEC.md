@@ -85,6 +85,9 @@ Wszystkie odpowiedzi API mają `Cache-Control: no-store`. Kod w ścieżce jest n
 - **Cofanie:** `Ctrl+Z` / `Ctrl+Y` cofają i ponawiają wyłącznie zmiany **tej osoby** (menedżer cofania Yjs);
   przyciski w pasku formatowania robią to samo na telefonie.
 - **Kod QR:** okno z kodem QR (SVG, biała karta niezależnie od motywu), kodem pokoju i przyciskiem „Skopiuj link".
+- **Edycja awatara:** przycisk z awatarem przy pseudonimie w czacie oraz pozycja „Zmień awatar” w menu ⋯ otwierają okno: podgląd,
+  siatka 12 twarzy (jedna to aktualna), „Losuj nowe twarze” i osiem kolorów osób. Zapis zmienia `face` i `color` w tożsamości
+  (sessionStorage) i w awarenessie; nowe wiadomości niosą nowy wygląd, starsze zostają z dawnym.
 - **Strona `/prywatnosc`:** opis tego, co serwer widzi i czego nie. Zmiana działania serwera wymaga zmiany tego tekstu.
 - **Układ:** dwie kolumny od 720 px szerokości *okna* (container query), poniżej zakładki.
 - **Okno mini:** Document Picture-in-Picture 380 × 540 w Chrome i Edge; w pozostałych

@@ -97,6 +97,7 @@ Pokazujesz ekran, wszyscy skanują. Kod jest fioletowo-różowy na białej karci
 ### Pseudonimy
 - **Losowy pseudonim** dla każdego (`Kruk 38`, `Wydra 12`), kolor i ilustrowany awatar generowany lokalnie w Twojej przeglądarce (bez zapytań do jakiegokolwiek serwisu z awatarami)
 - **Zmiana jednym kliknięciem** - pole przypomina, żeby nie używać imienia i nazwiska
+- **Edycja awatara** - kliknij go w czacie (albo w menu pokoju): wybierz twarz z siatki, wylosuj nowe, wybierz jeden z ośmiu kolorów. Inni widzą zmianę od razu, a starsze wiadomości zostają z dawnym wyglądem
 - **Nic nie jest zapamiętywane** - pseudonim żyje w karcie przeglądarki i razem z nią znika
 
 ### Małe, szybkie, dyskretne

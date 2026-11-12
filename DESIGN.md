@@ -125,6 +125,9 @@ obwódki i imienia w dymku czatu (kolor na ciemnym panelu ≥ 7 : 1).
   (`src/Avatar.tsx`, osobny leniwy fragment), z tłem w kolorze osoby. Ziarno to `face` z tożsamości (stałe w karcie, więc
   zmiana pseudonimu nie zmienia twarzy). Do chwili wygenerowania, albo gdy się nie uda, jest inicjał na kolorowym kółku.
   Obraz trafia do `<img>` jako data URI (CSP: `img-src ... data:`), zero zapytań do zewnętrznych serwisów.
+- **Edytor awatara (`AvatarDialog`):** okno z dużym podglądem (96 px), siatką 4 × 3 twarzy (52 px, wybrana ma zieloną obwódkę),
+  przyciskiem „Losuj nowe twarze” i ośmioma kółkami kolorów (`role="radiogroup"`, wybrany ma biały pierścień). Przyciski
+  „Anuluj / Zapisz” są przyklejone do dołu okna (`position: sticky`), żeby w oknie mini nie trzeba było przewijać.
 - **Etykieta kursora:** pigułka w kolorze osoby z ciemnym tekstem.
 - **QR:** gradient fioletowo-różowy (`#5B21B6 → #BE185D`) na **białej** karcie. Ciemne moduły na jasnym tle czytają
   się niezawodnie; odwrócony QR (jasny na ciemnym) nie jest czytany przez każdy skaner.

@@ -1,11 +1,12 @@
 const NAMES = ['Sowa', 'Lis', 'Jeż', 'Bóbr', 'Wydra', 'Kruk', 'Żuraw', 'Rys', 'Dzik', 'Łoś', 'Wilk', 'Orzeł', 'Borsuk', 'Sarna']
 // Jasne neony: ciemny tekst (#140a26) na nich ma kontrast >= 6,8 : 1, a one same na ciemnym panelu >= 7 : 1.
-const COLORS = ['#FF5FB0', '#4ADE80', '#38BDF8', '#FFA94D', '#B794F6', '#FACC15', '#FB7185', '#5EEAD4']
+export const COLORS = ['#FF5FB0', '#4ADE80', '#38BDF8', '#FFA94D', '#B794F6', '#FACC15', '#FB7185', '#5EEAD4']
+export const COLOR_NAMES = ['różowy', 'zielony', 'błękitny', 'pomarańczowy', 'fioletowy', 'żółty', 'koralowy', 'turkusowy']
+export const newFace = () => Math.random().toString(36).slice(2, 10)
 
 // `face` to ziarno awatara: stałe przez całą kartę, więc zmiana pseudonimu nie zmienia twarzy.
 export type Identity = { name: string; color: string; face: string }
 
-const newFace = () => Math.random().toString(36).slice(2, 10)
 
 const KEY = 'notas-tozsamosc'
 

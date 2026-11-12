@@ -31,3 +31,4 @@ export const IcPlus = ({ size = 34 }: { size?: number }) => I(<><circle cx="12" 
 export const IcInfo = () => I(<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>, 16)
 export const IcArrowRight = ({ size = 28 }: { size?: number }) => I(<><path d="M4 12h15M13 6l6 6-6 6" /></>, size)
 export const IcHourglass = ({ size = 44 }: { size?: number }) => I(<><path d="M6 3h12M6 21h12" /><path d="M7.5 3c0 5.2 4.5 6 4.5 9s-4.5 3.8-4.5 9M16.5 3c0 5.2-4.5 6-4.5 9s4.5 3.8 4.5 9" /><path d="M9.2 18.5h5.6l-2.8-3z" fill="currentColor" stroke="none" /></>, size)
+export const IcFace = () => I(<><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5c.9 1.2 2 1.8 3.5 1.8s2.6-.6 3.5-1.8" /><circle cx="9" cy="10" r="0.9" fill="currentColor" /><circle cx="15" cy="10" r="0.9" fill="currentColor" /></>)

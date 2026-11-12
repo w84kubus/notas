@@ -117,6 +117,14 @@ Wygląd wg trzech makiet (patrz `DESIGN.md`). Rzeczy, które łatwo zepsuć:
   (`ChatMsg.face`). Starsze wiadomości i symulowani klienci bez `face` używają imienia jako ziarna.
 - **Czcionka Barlow Condensed**: tylko `latin` i `latin-ext` w wagach 500–800 (`src/main.tsx`). Polskie znaki są w `latin-ext`.
 
+### Edycja awatara
+
+`AvatarDialog` zmienia `face` i `color` w tożsamości; `changeIdentity` zapisuje ją do sessionStorage, a efekt w `Workspace`
+wpisuje ją do awarenessu, więc inni widzą zmianę od razu (sprawdzone w dwóch kartach). **Starsze wiadomości w czacie
+zostają z dawnym wyglądem**, bo `face` i `color` są zapisane w samej wiadomości (świadomie: czat to historia, nie widok).
+Paleta kolorów to `COLORS` z `identity.ts` (wspólna z losowaniem tożsamości); tożsamość sprzed zmiany palety może mieć
+kolor spoza listy, wtedy w oknie żaden kolor nie jest zaznaczony. Przyciski okien (`.dialog-actions`) są sticky.
+
 ### Testowanie z symulowanymi osobami
 
 Do zrzutów ekranu używam skryptu łączącego kilka klientów Yjs z pokojem (obecność + wiadomości). **Zatrzymaj go
