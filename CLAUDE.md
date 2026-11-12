@@ -7,7 +7,7 @@ z kodem lub linkiem i wszyscy piszą w jednym dokumencie, z czatem obok. Bez kon
 instalowania. Pomysł: studenci dzielący się notatkami z wykładów, więc ma być **szybko,
 małe i dyskretne** (okno mini, ukrywanie na `Esc`).
 
-Domena docelowa: **notas.pl** (jeszcze niepodpięta). Produkcja: https://notas-mm5e.onrender.com
+Produkcja: **https://notas.pl** (Render; `www.notas.pl` przekierowuje na domenę główną; stary adres https://notas-mm5e.onrender.com działa nadal).
 
 Stack: React 18 + TypeScript strict + Vite 8, TipTap 3 + Yjs (CRDT), Node 22 z `http` + `ws`
 (bez frameworka), `node:test`. Hosting: Render (Docker, plan free) z autoDeploy z `main`.
@@ -87,7 +87,6 @@ w `.claude/launch.json` folderu nadrzędnego.
 
 ### Co realnie zostało
 
-- Podpięcie domeny **notas.pl** (Render → Settings → Custom Domains)
 - Test w Firefoksie i Safari (tam okno mini to zwykłe okienko)
 - Testy interfejsu (dziś tylko serwer ma testy automatyczne)
 - Wersja angielska interfejsu (pozostałe projekty mają PL/EN)
@@ -179,6 +178,19 @@ Po każdym pushu na `main` sprawdź w Render → notas → Events, że pojawiło
 a produkcja ma nowy bundle (`curl` strony głównej, nazwa pliku `index-*.js`). Gdyby znów zniknęło:
 Manual Deploy → Deploy latest commit, a potem sprawdź dostęp aplikacji Render do repo
 (GitHub → Settings → Applications → Render → Repository access). Pamiętaj, że każde wdrożenie kasuje wszystkie pokoje.
+
+### Domena notas.pl (podpięta 12.11.2026)
+
+Rejestrator i DNS: **home.pl** (panel: Domeny → notas.pl → Zarządzaj rekordami DNS). Rekordy:
+`A  notas.pl → 216.24.57.1` i `CNAME  www → notas-mm5e.onrender.com.` (**kropka na końcu jest obowiązkowa** w panelu home.pl);
+stary rekord `TXT` dla `notas.pl` zostaje nietknięty. W Render (Settings → Custom Domains) obie domeny są zweryfikowane,
+`www` przekierowuje na domenę główną. Certyfikat HTTPS Render wystawia sam.
+
+Pułapki z podłączania: (1) panel home.pl zapisuje rekord od razu, ale **serwer nazw publikuje go po ok. minucie**
+(sprawdzaj `dig @dns.home.pl www.notas.pl CNAME +short`); (2) lokalny resolver trzyma odpowiedź negatywną (do godziny),
+więc `www` może się „nie rozwiązywać" u Ciebie, choć działa publicznie (`dig @1.1.1.1`); (3) „Certificate Error" w Render
+zwykle znika po ponowieniu weryfikacji, gdy oba rekordy DNS są już widoczne; wystawienie certyfikatu trwa kilka minut.
+Przy zmianie hostingu pamiętaj o rekordach w home.pl i zmiennej `NOTAS_URL` (workflow `keepalive.yml`).
 
 ### Hosting z WebSocketami — nie Vercel
 

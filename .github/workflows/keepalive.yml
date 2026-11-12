@@ -17,5 +17,5 @@ jobs:
     steps:
       - name: Ping /healthz
         env:
-          NOTAS_URL: ${{ vars.NOTAS_URL || 'https://notas-mm5e.onrender.com' }}
+          NOTAS_URL: ${{ vars.NOTAS_URL || 'https://notas.pl' }}
         run: curl --fail --silent --show-error --max-time 90 --retry 2 --retry-delay 5 "$NOTAS_URL/healthz"

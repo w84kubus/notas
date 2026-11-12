@@ -9,7 +9,7 @@
   <br />
   🇬🇧 <strong>English</strong> · <a href="README.pl.md">🇵🇱 Czytaj po polsku</a>
   <br />
-  <a href="https://notas-mm5e.onrender.com"><strong>🌐 notas-mm5e.onrender.com</strong></a>
+  <a href="https://notas.pl"><strong>🌐 notas.pl</strong></a>
 </p>
 
 <p align="center">
