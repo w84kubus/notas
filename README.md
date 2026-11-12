@@ -99,7 +99,7 @@ Show the screen, everyone scans. The code is violet-to-pink on a white card, so 
 - **Unread counter** on the Chat tab when the window is narrow
 
 ### Nicknames
-- **A random nickname** for every person (`Kruk 38`, `Wydra 12`), a colour and an initial
+- **A random nickname** for every person (`Kruk 38`, `Wydra 12`), a colour and an illustrated avatar generated locally in your browser (no request to any avatar service)
 - **Change it in one click** - the field reminds you not to use your real name
 - **Nothing remembered** - the nickname lives in that browser tab and goes with it
 
@@ -134,7 +134,8 @@ Show the screen, everyone scans. The code is violet-to-pink on a white card, so 
 | Server | Node.js 22, plain `http` + [`ws`](https://github.com/websockets/ws), no framework |
 | QR code | [`qrcode`](https://github.com/soldair/node-qrcode) (SVG, loaded only when the dialog opens) |
 | Styling | Hand-written CSS - tokens, container queries, no framework |
-| Fonts | Schibsted Grotesk (self-hosted via Fontsource) |
+| Fonts | Schibsted Grotesk and Barlow Condensed (self-hosted via Fontsource) |
+| Avatars | [DiceBear](https://www.dicebear.com/) core + the Avataaars style, generated locally in the browser |
 | Tests | `node:test` (20 tests, each suite runs a real server process) |
 | CI | GitHub Actions (type check + tests) |
 | Deploy | Docker; Render Blueprint (`render.yaml`) or Fly.io (`fly.toml`) |
@@ -247,6 +248,11 @@ process** on a free port and talks to it over HTTP and WebSockets, so what is te
 |---|---|
 | **iOS** | Safari → Share (↑) → *Add to Home Screen* |
 | **Android** | Chrome → Menu (⋮) → *Install app* |
+
+## Credits
+
+- Avatars: [DiceBear](https://www.dicebear.com/) (MIT) with the *Avataaars* style by [Pablo Stanley](https://avataaars.com/) (free for personal and commercial use).
+- Font: [Barlow Condensed](https://github.com/jpt/barlow) by Jeremy Tribby (SIL Open Font License 1.1), and Schibsted Grotesk (OFL), both served from the app itself.
 
 ## License
 

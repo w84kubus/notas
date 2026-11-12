@@ -90,7 +90,6 @@ w `.claude/launch.json` folderu nadrzędnego.
 - Podpięcie domeny **notas.pl** (Render → Settings → Custom Domains)
 - Test w Firefoksie i Safari (tam okno mini to zwykłe okienko)
 - Testy interfejsu (dziś tylko serwer ma testy automatyczne)
-- Zgoda na pobranie czcionki Barlow Condensed (`@fontsource`) i ilustrowanych awatarów do czatu (DiceBear) — makiety je mają, kod działa bez nich
 - Wersja angielska interfejsu (pozostałe projekty mają PL/EN)
 - Wzory matematyczne (KaTeX), tabele, bloki kodu
 
@@ -109,6 +108,15 @@ Wygląd wg trzech makiet (patrz `DESIGN.md`). Rzeczy, które łatwo zepsuć:
 - **Poświata logo animuje `opacity` pseudo-elementu** (`::before` z `content: attr(data-text)`), nie `filter`.
 - **Po przebudowie (`npm run build`) otwarta karta ma stare nazwy plików** i leniwy fragment `Room-*.js` znika
   („Failed to fetch dynamically imported module”). To nie błąd aplikacji: odśwież kartę.
+
+### Awatary i czcionka (dołączone 12.11.2026, za zgodą Jakuba)
+
+- **Awatary: DiceBear `@dicebear/core@9` + `@dicebear/avataaars@9`, generowane lokalnie** (`src/Avatar.tsx`, leniwy import).
+  **Nigdy nie przełączaj na API DiceBear** (`api.dicebear.com`): obcy serwis w każdym awatarze łamie zasadę prywatności i CSP.
+  Core musi być w wersji 9, bo styl `@dicebear/avataaars@9` ma peer `^9`; wersja 10 core go nie obsłuży.
+- Ziarno twarzy to `face` w tożsamości (sessionStorage), przesyłane w awarenessie i w każdej wiadomości czatu
+  (`ChatMsg.face`). Starsze wiadomości i symulowani klienci bez `face` używają imienia jako ziarna.
+- **Czcionka Barlow Condensed**: tylko `latin` i `latin-ext` w wagach 500–800 (`src/main.tsx`). Polskie znaki są w `latin-ext`.
 
 ### Testowanie z symulowanymi osobami
 

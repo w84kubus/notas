@@ -54,7 +54,7 @@ export default function Privacy() {
       <h2>Czego nie robimy</h2>
       <p>
         Nie sprzedajemy danych, nie profilujemy, nie wysyłamy niczego do stron trzecich. Czcionki są hostowane razem
-        z aplikacją.
+        z aplikacją, a awatary powstają w Twojej przeglądarce, bez zapytań do zewnętrznych serwisów.
       </p>
 
       <h2>Kontakt</h2>

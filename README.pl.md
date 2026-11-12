@@ -95,7 +95,7 @@ Pokazujesz ekran, wszyscy skanują. Kod jest fioletowo-różowy na białej karci
 - **Licznik nieprzeczytanych** na zakładce Czat, gdy okno jest wąskie
 
 ### Pseudonimy
-- **Losowy pseudonim** dla każdego (`Kruk 38`, `Wydra 12`), kolor i inicjał
+- **Losowy pseudonim** dla każdego (`Kruk 38`, `Wydra 12`), kolor i ilustrowany awatar generowany lokalnie w Twojej przeglądarce (bez zapytań do jakiegokolwiek serwisu z awatarami)
 - **Zmiana jednym kliknięciem** - pole przypomina, żeby nie używać imienia i nazwiska
 - **Nic nie jest zapamiętywane** - pseudonim żyje w karcie przeglądarki i razem z nią znika
 
@@ -130,7 +130,8 @@ Pokazujesz ekran, wszyscy skanują. Kod jest fioletowo-różowy na białej karci
 | Serwer | Node.js 22, zwykły `http` + [`ws`](https://github.com/websockets/ws), bez frameworka |
 | Kod QR | [`qrcode`](https://github.com/soldair/node-qrcode) (SVG, ładowany dopiero przy otwarciu okna) |
 | Style | Ręcznie pisany CSS - tokeny, container queries, bez frameworka |
-| Fonty | Schibsted Grotesk (hostowany lokalnie przez Fontsource) |
+| Fonty | Schibsted Grotesk i Barlow Condensed (hostowane lokalnie przez Fontsource) |
+| Awatary | [DiceBear](https://www.dicebear.com/) (rdzeń) + styl Avataaars, generowane lokalnie w przeglądarce |
 | Testy | `node:test` (20 testów, każdy zestaw uruchamia prawdziwy proces serwera) |
 | CI | GitHub Actions (typy + testy) |
 | Wdrożenie | Docker; Render Blueprint (`render.yaml`) albo Fly.io (`fly.toml`) |
@@ -243,6 +244,11 @@ serwera** na wolnym porcie i rozmawia z nim przez HTTP i WebSockety, więc testo
 |---|---|
 | **iOS** | Safari → Udostępnij (↑) → *Do ekranu początkowego* |
 | **Android** | Chrome → Menu (⋮) → *Zainstaluj aplikację* |
+
+## Podziękowania
+
+- Awatary: [DiceBear](https://www.dicebear.com/) (MIT) ze stylem *Avataaars* autorstwa [Pablo Stanleya](https://avataaars.com/) (wolny do użytku osobistego i komercyjnego).
+- Czcionka: [Barlow Condensed](https://github.com/jpt/barlow) Jeremy'ego Tribby'ego (SIL Open Font License 1.1) oraz Schibsted Grotesk (OFL), obie serwowane przez samą aplikację.
 
 ## Licencja
 

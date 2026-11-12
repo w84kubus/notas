@@ -14,10 +14,12 @@ import {
   IcBack, IcBullets, IcClose, IcCode, IcCodeBlock, IcDownload, IcHide, IcLink, IcMini, IcOrdered, IcQr, IcRedo, IcSend, IcStrike, IcTimer, IcTrash, IcUnderline, IcUndo,
 } from './icons'
 import { SideCards } from './Side'
+import { Avatar } from './Avatar'
 import { CloseRoomDialog, MenuItem, QrDialog, RoomMenu } from './RoomMenu'
 
 type Conn = { ydoc: Y.Doc; provider: WebsocketProvider }
-type ChatMsg = { id: string; by: number; name: string; color: string; text: string; t: number }
+type ChatMsg = { id: string; by: number; name: string; color: string; face?: string; text: string; t: number }
+type Peer = { id: number; name: string; color: string; face?: string }
 type Status = 'connecting' | 'connected' | 'disconnected'
 
 const EPHEMERAL_MS = 10 * 60_000
@@ -195,7 +197,7 @@ function Workspace(props: {
   const [dialog, setDialog] = useState<null | 'qr' | 'close'>(null)
   const [closing, setClosing] = useState(false)
   const [lost, setLost] = useState(false)
-  const [peers, setPeers] = useState<{ id: number; name: string; color: string }[]>([])
+  const [peers, setPeers] = useState<Peer[]>([])
   const [msgs, setMsgs] = useState<ChatMsg[]>([])
   const [ephemeral, setEphemeral] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -243,8 +245,8 @@ function Workspace(props: {
     provider.on('status', onStatus)
     const aw = provider.awareness
     const onAw = () => {
-      const list: { id: number; name: string; color: string }[] = []
-      aw.getStates().forEach((s, id) => s.user && list.push({ id, name: s.user.name, color: s.user.color }))
+      const list: Peer[] = []
+      aw.getStates().forEach((s, id) => s.user && list.push({ id, name: s.user.name, color: s.user.color, face: s.user.face }))
       list.sort((a, b) => (a.id === ydoc.clientID ? -1 : b.id === ydoc.clientID ? 1 : a.id - b.id))
       setPeers(list)
     }
@@ -381,7 +383,7 @@ function Workspace(props: {
   }, [editor, hidden, expired])
 
   function send(text: string) {
-    chat.push([{ id: crypto.randomUUID(), by: ydoc.clientID, name: identity.name, color: identity.color, text, t: Date.now() }])
+    chat.push([{ id: crypto.randomUUID(), by: ydoc.clientID, name: identity.name, color: identity.color, face: identity.face, text, t: Date.now() }])
     if (chat.length > MAX_MSGS) chat.delete(0, chat.length - MAX_MSGS)
   }
 
@@ -466,7 +468,7 @@ function Workspace(props: {
             <div className="avatars" aria-label={`W pokoju: ${peers.length}`}>
               {shown.map((p) => (
                 <span key={p.id} className="avatar" style={{ '--c': p.color } as CSSProperties} title={p.name}>
-                  {p.name.charAt(0).toUpperCase()}
+                  <Avatar seed={p.face ?? p.name} color={p.color} name={p.name} size={30} />
                 </span>
               ))}
               {more > 0 && <span className="avatar avatar-more">+{more}</span>}
@@ -685,7 +687,7 @@ function ChatList({ msgs, me }: { msgs: ChatMsg[]; me: number }) {
       {msgs.map((m) => (
         <div key={m.id} className={`msg ${m.by === me ? 'mine' : ''}`} style={{ '--c': m.color } as CSSProperties}>
           <span className="msg-avatar" aria-hidden="true">
-            {m.name.charAt(0).toUpperCase()}
+            <Avatar seed={m.face ?? m.name} color={m.color} name={m.name} size={38} />
           </span>
           <div className="msg-bubble">
             <span className="msg-name">{m.name}</span>

@@ -72,9 +72,9 @@ obwódki i imienia w dymku czatu (kolor na ciemnym panelu ≥ 7 : 1).
 
 ## 2. Typografia
 
-- **Nagłówki i etykiety:** `--font-display`, wąski krój w WERSALIKACH (`Barlow Condensed` → `Roboto Condensed` →
-  `Arial Narrow` → systemowy wąski). **Stan: Barlow Condensed nie jest jeszcze dołączony do projektu** (czeka na zgodę
-  na pobranie); do tego czasu działa systemowy krój wąski.
+- **Nagłówki i etykiety:** `--font-display`, wąski krój w WERSALIKACH: **Barlow Condensed** (wagi 500–800, podzbiory
+  `latin` i `latin-ext`, licencja OFL, hostowany lokalnie przez `@fontsource`), a awaryjnie `Roboto Condensed` →
+  `Arial Narrow` → systemowy wąski. Importy w `src/main.tsx`; nie dodawaj innych podzbiorów ani wag bez potrzeby.
 - **Tekst, czat, notatki:** Schibsted Grotesk (hostowany lokalnie, `latin-ext`).
 - **Kod:** `--font-mono` (systemowy).
 - **Logo:** Schibsted Grotesk 800 kursywą, gradient `#FFF → #B8F3FF → #CFB0FF → #F0A1FF` w tekście
@@ -121,6 +121,10 @@ obwódki i imienia w dymku czatu (kolor na ciemnym panelu ≥ 7 : 1).
 - **Edytor:** ciemny panel; `mark` limonkowy, kod w tekście i bloki kodu zielone na prawie czarnym, punktory różowe.
 - **Czat:** nagłówek „Czat pokoju” + liczba osób online; wiadomość = awatar (inicjał) + dymek z obwódką i poświatą
   w kolorze osoby, imię wewnątrz dymka. Własne wiadomości mają przy imieniu „(Ty)”.
+- **Awatary:** ilustrowane twarze (DiceBear, styl Avataaars, autor Pablo Stanley), generowane **lokalnie w przeglądarce**
+  (`src/Avatar.tsx`, osobny leniwy fragment), z tłem w kolorze osoby. Ziarno to `face` z tożsamości (stałe w karcie, więc
+  zmiana pseudonimu nie zmienia twarzy). Do chwili wygenerowania, albo gdy się nie uda, jest inicjał na kolorowym kółku.
+  Obraz trafia do `<img>` jako data URI (CSP: `img-src ... data:`), zero zapytań do zewnętrznych serwisów.
 - **Etykieta kursora:** pigułka w kolorze osoby z ciemnym tekstem.
 - **QR:** gradient fioletowo-różowy (`#5B21B6 → #BE185D`) na **białej** karcie. Ciemne moduły na jasnym tle czytają
   się niezawodnie; odwrócony QR (jasny na ciemnym) nie jest czytany przez każdy skaner.
@@ -159,7 +163,8 @@ w pętli, parallax, migotanie, animacje przy przewijaniu.
 - ❌ Odwróconego (jasny na ciemnym) kodu QR.
 - ❌ Animowania `filter` i `box-shadow` w nieskończonej pętli.
 - ❌ Destrukcyjnej akcji bez okna potwierdzenia i możliwości pobrania notatek przed nią.
-- ❌ Zewnętrznych obrazów i czcionek pobieranych bez zgody (patrz „Typografia”).
+- ❌ Zewnętrznych obrazów i czcionek pobieranych bez zgody. Awatary i czcionki są **lokalne**; nie wolno przepiąć awatarów
+  na API DiceBear (zapytania do obcego serwisu łamią obietnicę prywatności).
 
 ---
 
