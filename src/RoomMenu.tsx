@@ -125,21 +125,29 @@ export function Dialog(props: { title: string; onClose: () => void; children: Re
 
 /* ------------------------- kod QR ------------------------- */
 
-export function QrDialog({ code, display, onClose, onCopy }: { code: string; display: string; onClose: () => void; onCopy: () => void }) {
-  const url = `${location.origin}/${code}`
+/** QR jako SVG: fioletowo-różowy gradient na białej karcie (ciemne moduły na jasnym tle skanują się niezawodnie). */
+export function useQrSvg(url: string, id: string) {
   const [svg, setSvg] = useState('')
-
-  // biblioteka QR ładuje się dopiero przy otwarciu okna
   useEffect(() => {
     let off = false
     import('qrcode')
-      .then((m) => ((m as any).default ?? m).toString(url, { type: 'svg', margin: 1, color: { dark: '#18212C', light: '#FFFFFF' } }) as Promise<string>)
-      .then((s) => !off && setSvg(s))
+      .then((m) => ((m as any).default ?? m).toString(url, { type: 'svg', margin: 1, color: { dark: '#4c1d95', light: '#FFFFFF' } }) as Promise<string>)
+      .then((s) => {
+        if (off) return
+        const defs = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b21b6"/><stop offset="1" stop-color="#be185d"/></linearGradient></defs>`
+        setSvg(s.replace(/stroke="#4c1d95"/g, `stroke="url(#${id})"`).replace(/(<svg[^>]*>)/, `$1${defs}`))
+      })
       .catch(() => {})
     return () => {
       off = true
     }
-  }, [url])
+  }, [url, id])
+  return svg
+}
+
+export function QrDialog({ code, display, onClose, onCopy }: { code: string; display: string; onClose: () => void; onCopy: () => void }) {
+  const url = `${location.origin}/${code}`
+  const svg = useQrSvg(url, 'qr-dialog')
 
   return (
     <Dialog
@@ -157,7 +165,7 @@ export function QrDialog({ code, display, onClose, onCopy }: { code: string; dis
       }
     >
       <p className="dialog-text">Zeskanuj telefonem albo przepisz kod. Pokój nie ma hasła: wejść może każdy, kto zna kod, więc pokaż go tylko tym, z którymi chcesz pisać.</p>
-      <div className="qr" aria-label={`Kod QR prowadzący do ${url}`} dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="qr" role="img" aria-label={`Kod QR prowadzący do ${url}`} dangerouslySetInnerHTML={{ __html: svg }} />
       <p className="qr-code">{display}</p>
     </Dialog>
   )

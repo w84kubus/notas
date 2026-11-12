@@ -8,9 +8,9 @@ export default function Privacy() {
   }, [])
 
   return (
-    <main className="home prose">
-      <p className="brand">Notas<span>.pl</span></p>
-      <h1 className="h-small">Prywatność</h1>
+    <main className="page prose" id="glowna">
+      <p className="wordmark" aria-hidden="true">Notas</p>
+      <h1>Prywatność</h1>
       <p className="lead">
         Notas nie ma kont. Nie pyta o imię, e-mail ani nic, po czym dałoby się Ciebie rozpoznać. Nie używa ciasteczek,
         analityki ani reklam.

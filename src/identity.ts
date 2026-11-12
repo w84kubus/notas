@@ -1,6 +1,6 @@
 const NAMES = ['Sowa', 'Lis', 'Jeż', 'Bóbr', 'Wydra', 'Kruk', 'Żuraw', 'Rys', 'Dzik', 'Łoś', 'Wilk', 'Orzeł', 'Borsuk', 'Sarna']
-// Każdy kolor ma kontrast ≥ 4,5 : 1 z białym tekstem (etykieta kursora, inicjał w awatarze).
-const COLORS = ['#C2410C', '#1D63C4', '#2B7A3D', '#7048E8', '#A15C07', '#0E7490', '#C2255C', '#4C5C7A']
+// Jasne neony: ciemny tekst (#140a26) na nich ma kontrast >= 6,8 : 1, a one same na ciemnym panelu >= 7 : 1.
+const COLORS = ['#FF5FB0', '#4ADE80', '#38BDF8', '#FFA94D', '#B794F6', '#FACC15', '#FB7185', '#5EEAD4']
 
 export type Identity = { name: string; color: string }
 

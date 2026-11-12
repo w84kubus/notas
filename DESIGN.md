@@ -1,191 +1,174 @@
-# DESIGN.md — system wizualny „Zakreślacz"
+# DESIGN.md — system wizualny „Neon”
 
-Ten plik jest **jedynym źródłem prawdy o wyglądzie aplikacji**. Każdy nowy komponent używa
-tokenów i receptur stąd. Nie wymyślaj własnych kolorów, cieni ani promieni. Tokeny żyją
-w `:root` w `src/styles.css`.
+Ten plik jest **jedynym źródłem prawdy o wyglądzie aplikacji**. Każdy nowy komponent używa tokenów i receptur
+stąd. Tokeny żyją w `:root` w `src/styles.css`, w trzech warstwach (marka → znaczenie → komponent).
+
+Źródło kierunku: trzy makiety od Jakuba (ekran startowy, pokój z paskiem bocznym, widok z dymkami czatu).
+Makiety wygrywają z każdą ogólną regułą stylu; poniżej opisane jest to, co z nich wynika.
 
 ---
 
 ## 0. Kierunek
 
-Papier i atrament, a jedyny kolor to **żółty zakreślacz** — tak jak w zeszycie studenta.
-Spokojne, chłodne tło (jak kartka w świetle sali wykładowej), czarno-granatowy tekst i jeden
-akcent, który wskazuje „tu jest to ważne": kod pokoju, aktywna zakładka, główny przycisk,
-zakreślony fragment notatek.
+Neonowa noc: głęboki, ciemnofioletowy fundament, szklane panele z cienką, świecącą obwódką i jeden mocny akcent
+na ekranie — **gradientowe logo „Notas”** z poświatą. Kolory mają znaczenie, nie ozdabiają:
 
-Aplikacja ma **nie rzucać się w oczy** — używa się jej w sali, obok slajdów, często w małym
-oknie. Dlatego: zero gradientów, zero cieni dekoracyjnych, zero animacji bez powodu.
+| Kolor | Znaczy |
+|---|---|
+| fioletowo-różowy gradient | „zrób coś nowego” (Załóż nowy pokój) |
+| neonowa zieleń | „wejdź / to jest kod” (Wejdź, kod pokoju) |
+| różowy | czas, który ucieka (Znika za) |
+| czerwień | ostrożnie / ukryj (Panic Mode, zamknięcie pokoju) |
+| limonka | zaznaczenie w tekście (zakreślacz) i akcje pozytywne w oknach |
+| kolory osób | kto jest kim (dymki czatu, awatary, kursory) |
 
-**Element sygnaturowy:** żółta plakietka z kodem pokoju (`.code-chip`) w lewym górnym rogu.
-To jedyna plama koloru w całym pokoju i zarazem najważniejsza informacja.
+**Napięcie, o którym trzeba wiedzieć:** aplikacja ma być dyskretna na wykładzie, a neon przyciąga wzrok. Dlatego
+**Panic Mode (`Esc`) jest w pasku bocznym jako osobna, widoczna karta**, a nie ukrytą funkcją. Nie ma jasnego motywu.
 
 ---
 
 ## 1. Tokeny
 
-### Kolory — jasny motyw (domyślny)
+### Warstwa 1: marka (surowe kolory)
 
-| Token | Wartość | Użycie |
-|---|---|---|
-| `--paper` | `#EDF0F3` | tło aplikacji, paski, czat |
-| `--card` | `#FFFFFF` | powierzchnia edytora, pola tekstowe |
-| `--ink` | `#18212C` | tekst, obramowania aktywnych elementów |
-| `--ink-2` | `#566172` | tekst drugorzędny, podpowiedzi, nieaktywne zakładki |
-| `--line` | `#D3D9E0` | cienkie linie podziału |
-| `--hl` | `#FFE45C` | **akcent**: zakreślacz, kod pokoju, główny przycisk, aktywna zakładka |
-| `--on-hl` | `#18212C` | tekst na akcencie (zawsze ciemny, w obu motywach) |
-| `--danger` | `#B3261E` | błędy, baner „brak połączenia" |
+| Token | Wartość | Token | Wartość |
+|---|---|---|---|
+| `--night-950` | `#07030F` | `--mint-300` | `#86FFB0` |
+| `--night-900` | `#0D0719` (tło) | `--mint-400` | `#4ADE80` |
+| `--night-800` | `#150C2B` | `--cyan-300` | `#67E8F9` |
+| `--night-700` | `#20134A` | `--cyan-400` | `#22D3EE` |
+| `--violet-400` | `#C084FC` | `--pink-400` | `#FF5FB0` |
+| `--violet-500` | `#A855F7` | `--lime-300` | `#C6F432` |
+| `--violet-600` | `#7C3AED` | `--red-400` | `#FF5A5F` |
+| `--magenta-500` | `#EC4899` | `--white` | `#F6F2FF` |
 
-### Kolory — ciemny motyw (`prefers-color-scheme: dark`)
+### Warstwa 2: znaczenie (role)
 
-| Token | Wartość |
-|---|---|
-| `--paper` | `#141A22` |
-| `--card` | `#1B232D` |
-| `--ink` | `#E8ECF1` |
-| `--ink-2` | `#9AA6B5` |
-| `--line` | `#2B3541` |
-| `--hl` | `#FFE45C` (bez zmian) |
-| `--danger` | `#FF8A80` |
+`--bg`, `--ink` (tekst), `--ink-2` (tekst drugorzędny `#B9ACD9`), `--line`, `--glass` (tło panelu), `--accent`,
+`--hl` (zakreślacz), `--on-hl`, `--danger`, `--focus` (`--cyan-400`), `--grad-create`, `--grad-join`.
 
-Akcent jest ten sam w obu motywach, a tekst na nim zawsze ciemny. Motyw wynika z ustawień
-systemu — **nie ma przełącznika**.
+### Warstwa 3: komponent
+
+Promienie: `--r-sm: 10px` (przyciski małe, pozycje menu), `--r-md: 16px` (pola, przyciski, dymki), `--r-lg: 22px`
+(panele, karty). Czcionki: `--font-display`, `--font-body`, `--font-mono`.
 
 ### Kolory osób
 
-Każda osoba dostaje jeden z ośmiu kolorów (kropka przy pseudonimie, awatar, kursor, imię na czacie):
+Osiem jasnych neonów: `#FF5FB0` `#4ADE80` `#38BDF8` `#FFA94D` `#B794F6` `#FACC15` `#FB7185` `#5EEAD4`.
+Używane jako tło awatara i etykiety kursora (z **ciemnym** tekstem `#140A26`, kontrast ≥ 6,8 : 1) i jako kolor
+obwódki i imienia w dymku czatu (kolor na ciemnym panelu ≥ 7 : 1).
 
-`#C2410C` `#1D63C4` `#2B7A3D` `#7048E8` `#A15C07` `#0E7490` `#C2255C` `#4C5C7A`
+### Kontrasty (policzone)
 
-Wszystkie dają kontrast **≥ 5,2 : 1** z białym tekstem (etykieta kursora, inicjał w awatarze).
-Imię na czacie jest rysowane kolorem osoby **zmieszanym z `--ink`** (`color-mix(in srgb, var(--c) 60%, var(--ink))`),
-więc w jasnym motywie robi się ciemniejsze, a w ciemnym jaśniejsze — ≥ 5,6 : 1 w obu. Sam kolor
-bez domieszki nie przeszedłby kontrastu na obu tłach naraz.
-
----
-
-### Promienie i wymiary
-
-| Token | Wartość | Użycie |
-|---|---|---|
-| `--radius` | `10px` | przyciski, plakietka kodu, toast |
-| mały | `7–8px` | przyciski narzędziowe, pola w czacie |
-| pełny | `50%` | awatary, kropki |
-| cel dotyku | min. `34–36px` | przyciski ikonowe i narzędziowe |
-| wysokość paska | ~`55px` | górny pasek pokoju |
+| Zestawienie | Kontrast |
+|---|---|
+| biały tekst na gradiencie przycisku (cały zakres, końcówka `#DB2777`) | ≥ 4,6 : 1 |
+| ciemny tekst `#05200F` na zielonym przycisku | 9,9–14 : 1 |
+| `--ink-2` na `--bg` | 9,4 : 1 |
+| limonka `#C6F432` na panelu | 15,3 : 1 |
+| `[Esc]` `#FF7377` na karcie Panic Mode | 7,0 : 1 |
 
 ---
 
 ## 2. Typografia
 
-**Jedna rodzina: Schibsted Grotesk** (zmienna, hostowana lokalnie przez Fontsource), z awaryjnym
-`system-ui`. Ma `latin-ext`, więc Ą Ć Ę Ł Ń Ó Ś Ź Ż są w kroju, a nie podstawiane.
+- **Nagłówki i etykiety:** `--font-display`, wąski krój w WERSALIKACH (`Barlow Condensed` → `Roboto Condensed` →
+  `Arial Narrow` → systemowy wąski). **Stan: Barlow Condensed nie jest jeszcze dołączony do projektu** (czeka na zgodę
+  na pobranie); do tego czasu działa systemowy krój wąski.
+- **Tekst, czat, notatki:** Schibsted Grotesk (hostowany lokalnie, `latin-ext`).
+- **Kod:** `--font-mono` (systemowy).
+- **Logo:** Schibsted Grotesk 800 kursywą, gradient `#FFF → #B8F3FF → #CFB0FF → #F0A1FF` w tekście
+  (`background-clip: text`), podwójna poświata `drop-shadow`.
 
-| Rola | Rozmiar | Waga | Uwagi |
-|---|---|---|---|
-| Nagłówek startu (`h1`) | `clamp(2.5rem, 9vw, 4.2rem)` | 760 | `letter-spacing: -0.035em`, `line-height: 1.02` |
-| Znak „Notas.pl" | `1.15rem` | 800 (`.pl` — 600, `--ink-2`) | |
-| Kod pokoju (plakietka) | `1.05rem` | 750 | `letter-spacing: 0.12em`, cyfry tabelaryczne |
-| Kod w polu wpisywania | `1.7rem` | 700 | `letter-spacing: 0.16em`, wielkie litery |
-| Tekst notatek | `1.02rem` (≥ 720 px: `1.08rem`) | 400 | `line-height: 1.65` |
-| Nagłówek w notatkach (`h2`) | `1.3rem` | bold | `line-height: 1.25` |
-| Interfejs | `0.92–1rem` | 400–650 | |
-
-Długość linii w edytorze jest ograniczona marginesami do ok. 70 znaków.
+| Rola | Rozmiar | Uwagi |
+|---|---|---|
+| Logo na starcie | `clamp(5rem, 15vw, 11.5rem)` | pulsuje poświata (opacity) |
+| Tagline | `clamp(1.4rem, 2.6vw, 2.1rem)` | `text-wrap: balance` |
+| Główny przycisk | `clamp(1.6rem, 3vw, 2.4rem)` | wersaliki, wąski |
+| Kod pokoju (pasek boczny) | `2.55rem` | tabelaryczne cyfry |
+| „Znika za” | `3rem` | różowy, poświata |
+| Nagłówek notatki `h1` / `h2` | `2.1rem` / `1.45rem` | proste, 750 |
 
 ---
 
 ## 3. Układ
 
-- **Dwa układy, jeden komponent.** Pokój (`.room`) ma `container-type: inline-size` i reaguje na
-  szerokość **własnego okna**, nie urządzenia.
-  - `≥ 720px` — notatki i czat obok siebie (czat 21 rem), zakładki ukryte.
-  - `< 720px` — jedna kolumna, dolne zakładki **Notatki / Czat**, licznik nieprzeczytanych.
-- Wysokość pokoju to `100dvh` (nie `100vh`).
-- Start (`.home`) jest wyrównany do lewej, `max-width: 34rem`, z lewym marginesem rosnącym z szerokością.
-- Pasek pokoju: plakietka kodu · obecni · (rozpórka) · pobierz · okno mini · ukryj.
+- **Start:** dwie kolumny (lewa: logo, tagline, przycisk, trzy kroki; prawa: karta „Dołącz do pokoju”). Poniżej
+  900 px jedna kolumna. Tło: gradienty radialne + SVG z siecią linii i węzłów.
+- **Pokój** (`.room` jest kontenerem, układ zależy od **szerokości okna**, nie urządzenia):
+
+| Szerokość okna | Układ |
+|---|---|
+| ≥ 1100 px | pasek boczny 17,5 rem · notatki · czat 22 rem |
+| 720–1099 px | notatki · czat (kod i obecni w górnym pasku) |
+| < 720 px | jedna kolumna, dolne zakładki Notatki / Czat |
+
+- Panele pływają na tle (odstęp 12 px), nie przylegają do krawędzi.
+- Wysokość `100dvh`, bezpieczne obszary `env(safe-area-inset-*)` (górny, boczne, dolny pod zakładkami).
 
 ---
 
 ## 4. Komponenty
 
-### Plakietka kodu (`.code-chip`)
-Żółte tło, ciemny tekst, kropka stanu połączenia (zielona / bursztynowa / czerwona). Klik kopiuje link.
-
-### Przyciski
-- `.btn` — obrys `1.5px solid var(--ink)`, przezroczyste tło, wysokość 44 px.
-- `.btn-primary` — wypełnienie `--hl`, bez obrysu. **Jeden na ekran.**
-- `.icon-btn` — kwadrat 36 px, bez obrysu, tło tylko przy hover; `.is-on` = żółte tło.
-
-### Pasek formatowania (`.tool`)
-Przyciski 32 px. Aktywny = odwrócone kolory (`--ink` na `--paper`). Zakreślacz ma stale
-półprzezroczysty żółty podkład, a aktywny — pełny żółty z obrysem `--ink`.
-
-### Zakreślony tekst (`mark`)
-`background: var(--hl)`, `color: var(--on-hl)`, promień 3 px. To ten sam żółty co w interfejsie — celowo.
-
-### Czat
-Wiadomość = lewa kreska 3 px (`--line`; u siebie `--hl`) + imię w kolorze osoby (pogrubione) + treść.
-Bez dymków i bez godzin. Pusty czat mówi, co można zrobić: „Tu pojawią się wiadomości. Możesz je
-wyczyścić jednym kliknięciem."
-
-### Kursor współpracy
-Pionowa kreska 2 px w kolorze osoby; etykieta z imieniem nad nią (11 px, 650, biały tekst).
-
-### Toast
-Ciemna plakietka na dole (`--ink` na `--paper`), akcja („Cofnij") w kolorze `--hl`, znika po 2,2 s
-(z akcją po 7 s). Rola `status`.
-
-### Baner błędu (`.offline`)
-Pasek `--danger` pod nagłówkiem. „Pokój wygasł" ma dwa przyciski obrysowane (Pobierz, Na start).
-
-### Menu pokoju (`.menu`)
-Ikona ⋯ w pasku otwiera listę pod przyciskiem (min. 17,5 rem, `white-space: nowrap`, jeden wiersz na pozycję,
-wysokość pozycji 38 px). Tło `--card`, cienka ramka `--line`, jedyny cień w całej aplikacji — bo to jedyny
-element, który leży *nad* treścią. Pozycja destrukcyjna („Zamknij pokój dla wszystkich") jest na dole,
-oddzielona linią, w kolorze `--danger`.
-
-### Okno dialogowe (`.dialog`)
-Wyśrodkowana karta `--card`, szerokość do 24 rem, promień 14 px, nad tłem `--ink` z 45% przezroczystości.
-Jeden przycisk główny (`.btn-primary`) albo jeden destrukcyjny (`.btn-danger`: wypełnienie `--danger`,
-tekst biały w jasnym i ciemny `#141A22` w ciemnym motywie). Fokus startuje na bezpiecznej akcji
-(„Anuluj", „Gotowe"), nigdy na destrukcyjnej.
-
-### Kod QR (`.qr`)
-Zawsze na **białej** karcie z ciemnym wzorem (`#18212C`), niezależnie od motywu — skanery wymagają
-kontrastu i jasnej ramki. Pod kodem ten sam kod pokoju drukowanymi znakami (1,6 rem, 750).
-
-### Zasłona „Ukryj" (`.cover`)
-Czysto biała, `position: fixed; inset: 0`, `z-index: 100`. **Zawsze biała**, także w ciemnym
-motywie — ma wyglądać jak pusta strona, a nie jak aplikacja z wyłączonym ekranem.
+- **Panel (`.panel`)**: szkło (`--glass`), obwódka 1,5 px, miękka poświata. Warianty: `neon-violet` (domyślny w pokoju,
+  słabsza poświata), `neon-green` (karta dołączania), `neon-pink`, `neon-red` (Panic Mode).
+- **Przycisk główny (`.btn-create`)**: gradient, tytuł + podtytuł, unosi się o 2 px na hover, wciska na `:active`.
+- **Przycisk „Wejdź” (`.btn-join`)**: zielony gradient, ciemny tekst.
+- **Trzy kroki:** ręcznie rysowane SVG (okno z kursorem, okno z łańcuchem i globusem, ludzie z dymkiem), różowe linie
+  z poświatą, strzałki między nimi. Lista `ol`, strzałki `aria-hidden`.
+- **Karty paska bocznego:** Znika za (klepsydra + czas), Kod pokoju (zielony, przycisk kopiowania), QR, Panic Mode.
+- **Pasek formatowania:** pigułka-panel; aktywne narzędzie ma fioletowo-różowy gradient, zakreślacz limonkowy.
+- **Edytor:** ciemny panel; `mark` limonkowy, kod w tekście i bloki kodu zielone na prawie czarnym, punktory różowe.
+- **Czat:** nagłówek „Czat pokoju” + liczba osób online; wiadomość = awatar (inicjał) + dymek z obwódką i poświatą
+  w kolorze osoby, imię wewnątrz dymka. Własne wiadomości mają przy imieniu „(Ty)”.
+- **Etykieta kursora:** pigułka w kolorze osoby z ciemnym tekstem.
+- **QR:** gradient fioletowo-różowy (`#5B21B6 → #BE185D`) na **białej** karcie. Ciemne moduły na jasnym tle czytają
+  się niezawodnie; odwrócony QR (jasny na ciemnym) nie jest czytany przez każdy skaner.
+- **Menu, okna, toast:** ciemne, z fioletową obwódką i poświatą; destrukcyjne akcje na czerwono.
+- **Zasłona „Ukryj”:** zawsze czysto biała (nie neon), żeby wyglądała jak pusta strona.
 
 ---
 
 ## 5. Ruch
 
-Prawie żaden. Jedyne przejście to `background-color 0.12s` na przyciskach (tylko gdy
-`prefers-reduced-motion: no-preference`). Bez animacji wejścia, bez konfetti, bez „skeletonów".
+Dozwolone: **jedno wejście przy ładowaniu** (logo, tagline, przycisk, kroki, karta — `rise`, transform + opacity),
+poświata logo pulsująca przez **opacity** pseudo-elementu (nie `filter`), unoszenie głównych przycisków (transform).
+Wszystko pod `prefers-reduced-motion: no-preference`. Zakazane: `transition: all`, animowanie `filter`/`box-shadow`
+w pętli, parallax, migotanie, animacje przy przewijaniu.
 
 ---
 
 ## 6. Dostępność
 
-- Widoczny fokus: `outline: 2px solid var(--ink); outline-offset: 2px` na każdym elemencie.
-- Każdy przycisk ikonowy ma `aria-label` i `title`.
-- Przyciski przełączane (`aria-pressed`): formatowanie, znikające wiadomości.
-- Czat: `aria-live="polite"`. Błędy: `role="alert"`. Toast: `role="status"`.
-- Kontrast (policzony, nie zgadywany): `--ink` na `--paper` 14,2 : 1 (jasny) i 14,7 : 1 (ciemny); `--on-hl` na `--hl` 12,8 : 1; `--ink-2` na `--paper` 5,5 : 1 (jasny) i 7,1 : 1 (ciemny); biały tekst na `--danger` 6,5 : 1.
-- Układ sprawdzony od szerokości okna 380 px (okno mini).
+- Widoczny fokus `--focus` (cyjan) na każdym elemencie; pola z własną obwódką fokusu mają ją wyraźną.
+- Przyciski ikonowe: `aria-label` i `title`; ikony dekoracyjne `aria-hidden`.
+- Linki „Przejdź do treści / notatek” (skip link), jeden `h1` na stronę (w pokoju ukryty wizualnie).
+- QR ma `role="img"` i opis z adresem.
+- `aria-live="polite"` na czacie, `role="status"` na toaście, `role="alert"` na błędach.
+- `overscroll-behavior: contain` w przewijanych panelach i oknach, `touch-action: manipulation` na przyciskach,
+  zaznaczony kolor `-webkit-tap-highlight-color`.
+- `color-scheme: dark`, `theme-color` `#0D0719`.
 
 ---
 
 ## 7. Czego nie robimy
 
-- ❌ Gradientów, cieni dekoracyjnych, szkła, rozmyć.
-- ❌ Drugiego koloru akcentu. Żółty jest jeden.
-- ❌ Przełącznika motywu — wynika z systemu.
-- ❌ Fontów bez `latin-ext`.
-- ❌ Zapisywania preferencji w `localStorage` (patrz `CLAUDE.md`, zasada 4).
+- ❌ Jasnego motywu ani przełącznika motywu.
 - ❌ Nowych kolorów osób poza ośmioma wyżej.
-- ❌ Cieni poza menu pokoju.
-- ❌ Destrukcyjnej akcji bez okna potwierdzenia i bez możliwości pobrania notatek przed nią.
+- ❌ Białego tekstu na różowym, jeśli kontrast spada poniżej 4,5 : 1 (stąd końcówka gradientu `#DB2777`).
+- ❌ Odwróconego (jasny na ciemnym) kodu QR.
+- ❌ Animowania `filter` i `box-shadow` w nieskończonej pętli.
+- ❌ Destrukcyjnej akcji bez okna potwierdzenia i możliwości pobrania notatek przed nią.
+- ❌ Zewnętrznych obrazów i czcionek pobieranych bez zgody (patrz „Typografia”).
+
+---
+
+## 8. Jak powstał (skille)
+
+- **frontend-design**: plan systemu i sprawdzenie, że wynik jest świadomy; brief (makiety) ma pierwszeństwo.
+- **tailwind-design-system**: architektura tokenów w trzech warstwach i nazewnictwo ról. Notas **nie** używa Tailwinda,
+  bo ma ręcznie pisany CSS.
+- **web-design-guidelines**: audyt kodu (poprawki: transition tylko na transform, safe area, skip link, `h1`, nbsp,
+  kontrast, `role="img"` dla QR, linki z Ctrl/Cmd).
+- **design-taste-frontend**: tylko ogólne zasady (równe krawędzie, jedno wejście, czytelność). Jego reguły dla stron
+  firmowych (m.in. zakaz fioletu) kolidują z makietami, więc jego bramka i skrypty **nie** są uruchamiane.

@@ -57,7 +57,7 @@ Czat jest przycinany do 200 ostatnich wiadomości.
 |---|---|
 | `GET /healthz` | `200 {"ok":true}` |
 | `POST /api/rooms` | `201 {"code":"K7M2QX"}`; `429` przy limicie; `503` gdy brak miejsca |
-| `GET /api/rooms/:kod` | `200 {"ok":true,"people":n}`; `404` dla nieistniejącego lub błędnego kodu; `429` przy blokadzie |
+| `GET /api/rooms/:kod` | `200 {"ok":true,"people":n,"expiresInMs":ms}` (ile zostało do wygaśnięcia przy braku ruchu; każda zmiana w pokoju odnawia pełne TTL); `404` dla nieistniejącego lub błędnego kodu; `429` przy blokadzie |
 | `DELETE /api/rooms/:kod` | `200 {"ok":true}` i zamknięcie pokoju: serwer wpisuje `closed: true` do mapy `settings` dokumentu (to niezawodny sygnał dla klientów), po ok. 0,4 s kończy każde połączenie kodem WebSocket **4001** i kasuje treść; kod przestaje istnieć natychmiast; `404` brak pokoju; `403` obca domena (`Origin`); `429` blokada |
 | `WS /ws/:kod` | protokół `y-websocket`; `404` brak pokoju, `403` obca domena (`Origin`), `429` blokada, `503` pokój pełny |
 | `GET /*` | pliki z `dist/`; ścieżka bez rozszerzenia → `index.html` (linki do pokoi) |
@@ -90,7 +90,9 @@ Wszystkie odpowiedzi API mają `Cache-Control: no-store`. Kod w ścieżce jest n
 - **Okno mini:** Document Picture-in-Picture 380 × 540 w Chrome i Edge; w pozostałych
   przeglądarkach wyskakujące okno z adresem `/KOD?mini=1`.
 - **Ukryj:** biała zasłona, tytuł karty „Nowa karta", edytor tylko do odczytu, czat wyłączony.
-- **Motyw:** jasny / ciemny z ustawień systemu. Szczegóły w [`DESIGN.md`](DESIGN.md).
+- **Motyw:** jeden, neonowy ciemny. Szczegóły w [`DESIGN.md`](DESIGN.md).
+- **Pasek boczny** (okno ≥ 1100 px): logo, „Znika za” (odliczanie z `expiresInMs`, odświeżane co minutę), kod pokoju z
+  przyciskiem kopiowania, QR, karta Panic Mode (`Esc`). W węższych oknach te informacje są w menu ⋯ i górnym pasku.
 
 ## 7. Wymagania niefunkcjonalne
 

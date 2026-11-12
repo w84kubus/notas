@@ -109,6 +109,8 @@ describe('pokoje i strona', () => {
     const code = await createRoom(srv.base)
     assert.equal((await fetch(`${srv.base}/api/rooms/${code}`)).status, 200)
     assert.equal((await fetch(`${srv.base}/api/rooms/${code.toLowerCase()}`)).status, 200, 'kod bez rozróżniania wielkości liter')
+    const info = await (await fetch(`${srv.base}/api/rooms/${code}`)).json()
+    assert.ok(info.expiresInMs > 11.9 * 3600_000 && info.expiresInMs <= 12 * 3600_000, `czas do wygaśnięcia: ${info.expiresInMs}`)
     assert.equal((await fetch(`${srv.base}/api/rooms/ZZZZZZ`)).status, 404)
     assert.equal((await fetch(`${srv.base}/api/rooms/ab`)).status, 404)
   })

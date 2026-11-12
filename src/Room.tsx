@@ -10,7 +10,10 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import { navigate } from './App'
 import { Identity, loadIdentity, saveIdentity } from './identity'
-import { IcBack, IcClose, IcDownload, IcHide, IcLink, IcMini, IcQr, IcRedo, IcSend, IcTimer, IcTrash, IcUndo } from './icons'
+import {
+  IcBack, IcBullets, IcClose, IcCode, IcCodeBlock, IcDownload, IcHide, IcLink, IcMini, IcOrdered, IcQr, IcRedo, IcSend, IcStrike, IcTimer, IcTrash, IcUnderline, IcUndo,
+} from './icons'
+import { SideCards } from './Side'
 import { CloseRoomDialog, MenuItem, QrDialog, RoomMenu } from './RoomMenu'
 
 type Conn = { ydoc: Y.Doc; provider: WebsocketProvider }
@@ -19,7 +22,7 @@ type Status = 'connecting' | 'connected' | 'disconnected'
 
 const EPHEMERAL_MS = 10 * 60_000
 const MAX_MSGS = 200
-const fmtCode = (c: string) => `${c.slice(0, 3)} ${c.slice(3)}`
+const fmtCode = (c: string) => `${c.slice(0, 3)}-${c.slice(3)}`
 
 /* ------------------------- okno mini ------------------------- */
 
@@ -53,6 +56,7 @@ function usePip(code: string) {
 
 export default function Room({ code, mini }: { code: string; mini: boolean }) {
   const [phase, setPhase] = useState<'checking' | 'ok' | 'missing' | 'limited' | 'offline'>('checking')
+  const [expiresIn, setExpiresIn] = useState(12 * 3_600_000)
   const [conn, setConn] = useState<Conn | null>(null)
   const [identity, setIdentity] = useState<Identity>(loadIdentity)
   const [hidden, setHidden] = useState(false)
@@ -61,7 +65,14 @@ export default function Room({ code, mini }: { code: string; mini: boolean }) {
   useEffect(() => {
     let off = false
     fetch(`/api/rooms/${code}`, { cache: 'no-store' })
-      .then((r) => !off && setPhase(r.ok ? 'ok' : r.status === 429 ? 'limited' : 'missing'))
+      .then(async (r) => {
+        if (off) return
+        if (r.ok) {
+          const info = await r.json().catch(() => null)
+          if (typeof info?.expiresInMs === 'number') setExpiresIn(info.expiresInMs)
+        }
+        setPhase(r.ok ? 'ok' : r.status === 429 ? 'limited' : 'missing')
+      })
       .catch(() => !off && setPhase('offline'))
     return () => {
       off = true
@@ -111,8 +122,9 @@ export default function Room({ code, mini }: { code: string; mini: boolean }) {
     }
     const [title, body] = msg[phase]
     return (
-      <main className="home">
-        <h1 className="h-small">{title}</h1>
+      <main className="page">
+        <p className="wordmark" aria-hidden="true">Notas</p>
+        <h1>{title}</h1>
         {body && <p className="lead">{body}</p>}
         {phase !== 'checking' && phase !== 'ok' && (
           <button className="btn btn-primary" onClick={() => navigate('/')}>
@@ -128,6 +140,7 @@ export default function Room({ code, mini }: { code: string; mini: boolean }) {
       key={inPip ? 'pip' : 'main'}
       code={code}
       conn={conn}
+      initialExpiresIn={expiresIn}
       identity={identity}
       onIdentity={changeIdentity}
       hidden={hidden}
@@ -142,8 +155,9 @@ export default function Room({ code, mini }: { code: string; mini: boolean }) {
   if (pip.win) {
     return (
       <>
-        <main className="home">
-          <h1 className="h-small">Okno mini jest otwarte</h1>
+        <main className="page">
+          <p className="wordmark" aria-hidden="true">Notas</p>
+          <h1>Okno mini jest otwarte</h1>
           <p className="lead">Pokój działa w małym oknie nad innymi. Możesz tę kartę zostawić w tle.</p>
           <button className="btn btn-primary" onClick={pip.close}>
             Przywróć tutaj
@@ -161,6 +175,7 @@ export default function Room({ code, mini }: { code: string; mini: boolean }) {
 function Workspace(props: {
   code: string
   conn: Conn
+  initialExpiresIn: number
   identity: Identity
   onIdentity: (i: Identity) => void
   hidden: boolean
@@ -170,7 +185,7 @@ function Workspace(props: {
   onMini: () => void
   onBack: () => void
 }) {
-  const { code, conn, identity, onIdentity, hidden, onToggleHide, canMini, inPip, onMini, onBack } = props
+  const { code, conn, initialExpiresIn, identity, onIdentity, hidden, onToggleHide, canMini, inPip, onMini, onBack } = props
   const { ydoc, provider } = conn
 
   const [tab, setTab] = useState<'notes' | 'chat'>('notes')
@@ -187,6 +202,31 @@ function Workspace(props: {
   const [unread, setUnread] = useState(0)
   const [toast, setToast] = useState<{ text: string; undo?: () => void } | null>(null)
   const toastTimer = useRef<number>()
+
+  // czas do wygaśnięcia: serwer podaje, ile zostało przy braku ruchu; odświeżamy co minutę
+  const [endsAt, setEndsAt] = useState(() => Date.now() + initialExpiresIn)
+  const [tick, setTick] = useState(Date.now())
+  useEffect(() => {
+    const pull = async () => {
+      try {
+        const r = await fetch(`/api/rooms/${code}`, { cache: 'no-store' })
+        if (r.ok) {
+          const info = await r.json()
+          if (typeof info.expiresInMs === 'number') setEndsAt(Date.now() + info.expiresInMs)
+        }
+      } catch {
+        /* bez sieci zostaje poprzednia wartość */
+      }
+    }
+    pull()
+    const refresh = window.setInterval(pull, 60_000)
+    const clock = window.setInterval(() => setTick(Date.now()), 15_000)
+    return () => {
+      window.clearInterval(refresh)
+      window.clearInterval(clock)
+    }
+  }, [code])
+  const left = Math.max(0, endsAt - tick)
 
   const chat = useMemo(() => ydoc.getArray<ChatMsg>('chat'), [ydoc])
   const settings = useMemo(() => ydoc.getMap<boolean>('settings'), [ydoc])
@@ -408,110 +448,143 @@ function Workspace(props: {
 
   return (
     <div className="room" data-tab={tab}>
-      <header className="bar">
-        <button className="code-chip" onClick={copyLink} title="Skopiuj link do pokoju">
-          <span className={`dot ${status}`} aria-hidden />
-          <span className="code-text">{fmtCode(code)}</span>
-        </button>
-        <div className="avatars" aria-label={`W pokoju: ${peers.length}`}>
-          {shown.map((p) => (
-            <span key={p.id} className="avatar" style={{ background: p.color }} title={p.name}>
-              {p.name.charAt(0).toUpperCase()}
-            </span>
-          ))}
-          {more > 0 && <span className="avatar avatar-more">+{more}</span>}
-        </div>
-        <div className="spacer" />
-        <RoomMenu items={menuItems} />
-        {canMini && (
-          <button className="icon-btn" onClick={onMini} aria-label="Okno mini" title="Okno mini (pływa nad innymi)">
-            <IcMini />
-          </button>
-        )}
-        {inPip && (
-          <button className="icon-btn" onClick={onBack} aria-label="Przywróć duże okno" title="Przywróć duże okno">
-            <IcBack />
-          </button>
-        )}
-        <button className="icon-btn" onClick={onToggleHide} aria-label="Ukryj (Esc)" title="Ukryj (Esc)">
-          <IcHide />
-        </button>
-      </header>
-
-      {expired ? (
-        <div className="offline expired" role="alert">
-          <span>{ended === 'closed' ? 'Pokój został zamknięty.' : 'Pokój wygasł.'} Pobierz notatki, zanim stąd wyjdziesz.</span>
-          <button onClick={download}>Pobierz</button>
-          <button onClick={() => navigate('/')}>Na start</button>
-        </div>
-      ) : (
-        lost && <div className="offline">Brak połączenia. Próbuję ponownie, nic nie przepadnie.</div>
-      )}
-
-      <div className="panes">
-        <section className="notes" aria-label="Notatki">
-          <div className="toolbar" role="toolbar" aria-label="Formatowanie">
-            <Tool run={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()} label="Cofnij (Ctrl+Z)">
-              <IcUndo />
-            </Tool>
-            <Tool run={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()} label="Ponów (Ctrl+Y)">
-              <IcRedo />
-            </Tool>
-            <Tool on={editor?.isActive('bold')} run={() => editor?.chain().focus().toggleBold().run()} label="Pogrubienie">
-              <b>B</b>
-            </Tool>
-            <Tool on={editor?.isActive('italic')} run={() => editor?.chain().focus().toggleItalic().run()} label="Kursywa">
-              <i>I</i>
-            </Tool>
-            <Tool on={editor?.isActive('highlight')} run={() => editor?.chain().focus().toggleHighlight().run()} label="Zakreślacz" marker>
-              Zakreśl
-            </Tool>
-            <Tool on={editor?.isActive('heading', { level: 2 })} run={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} label="Nagłówek">
-              H
-            </Tool>
-            <Tool on={editor?.isActive('bulletList')} run={() => editor?.chain().focus().toggleBulletList().run()} label="Lista punktowana">
-              •
-            </Tool>
-            <Tool on={editor?.isActive('orderedList')} run={() => editor?.chain().focus().toggleOrderedList().run()} label="Lista numerowana">
-              1.
-            </Tool>
-          </div>
-          <div className="editor-scroll">
-            <EditorContent editor={editor} />
-          </div>
-        </section>
-
-        <aside className="chat" aria-label="Czat">
-          <div className="chat-head">
-            <NameEditor identity={identity} onChange={onIdentity} />
-            <div className="chat-tools">
-              <button
-                className={`icon-btn ${ephemeral ? 'is-on' : ''}`}
-                onClick={toggleEphemeral}
-                aria-pressed={ephemeral}
-                aria-label="Znikające wiadomości (10 min)"
-                title={ephemeral ? 'Znikające wiadomości: włączone (10 min)' : 'Włącz znikające wiadomości (10 min)'}
-              >
-                <IcTimer />
-              </button>
-              <button className="icon-btn" onClick={clearChat} aria-label="Wyczyść czat u wszystkich" title="Wyczyść czat u wszystkich">
-                <IcTrash />
-              </button>
-            </div>
-          </div>
-          <ChatList msgs={visible} me={ydoc.clientID} />
-          <ChatInput onSend={send} disabled={hidden || expired} />
+      <a className="skip" href="#edytor">
+        Przejdź do notatek
+      </a>
+      <h1 className="sr-only">Notas, pokój {fmtCode(code)}</h1>
+      <div className="layout">
+        <aside className="side" aria-label="Informacje o pokoju">
+          <SideCards code={code} display={fmtCode(code)} left={left} onCopy={copyLink} onHide={onToggleHide} />
         </aside>
-      </div>
 
-      <nav className="tabs" aria-label="Widok">
-        <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>
-          Notatki
-        </button>
-        <button className={tab === 'chat' ? 'on' : ''} onClick={() => setTab('chat')}>
-          Czat{unread > 0 && <span className="badge">{unread}</span>}
-        </button>
-      </nav>
+        <div className="stage">
+          <header className="bar">
+            <button className="code-chip" onClick={copyLink} title="Skopiuj link do pokoju">
+              <span className={`dot ${status}`} aria-hidden />
+              <span className="code-text">{fmtCode(code)}</span>
+            </button>
+            <div className="avatars" aria-label={`W pokoju: ${peers.length}`}>
+              {shown.map((p) => (
+                <span key={p.id} className="avatar" style={{ '--c': p.color } as CSSProperties} title={p.name}>
+                  {p.name.charAt(0).toUpperCase()}
+                </span>
+              ))}
+              {more > 0 && <span className="avatar avatar-more">+{more}</span>}
+            </div>
+            <div className="spacer" />
+            <RoomMenu items={menuItems} />
+            {canMini && (
+              <button className="icon-btn" onClick={onMini} aria-label="Okno mini" title="Okno mini (pływa nad innymi)">
+                <IcMini />
+              </button>
+            )}
+            {inPip && (
+              <button className="icon-btn" onClick={onBack} aria-label="Przywróć duże okno" title="Przywróć duże okno">
+                <IcBack />
+              </button>
+            )}
+            <button className="icon-btn" onClick={onToggleHide} aria-label="Ukryj (Esc)" title="Ukryj (Esc)">
+              <IcHide />
+            </button>
+          </header>
+
+          {expired ? (
+            <div className="offline expired" role="alert">
+              <span>{ended === 'closed' ? 'Pokój został zamknięty.' : 'Pokój wygasł.'} Pobierz notatki, zanim stąd wyjdziesz.</span>
+              <button onClick={download}>Pobierz</button>
+              <button onClick={() => navigate('/')}>Na start</button>
+            </div>
+          ) : (
+            lost && <div className="offline">Brak połączenia. Próbuję ponownie, nic nie przepadnie.</div>
+          )}
+
+          <div className="panes">
+            <section className="notes" aria-label="Notatki" id="edytor" tabIndex={-1}>
+              <div className="toolbar panel neon-violet" role="toolbar" aria-label="Formatowanie">
+                <Tool run={() => editor?.chain().focus().undo().run()} disabled={!editor?.can().undo()} label="Cofnij (Ctrl+Z)">
+                  <IcUndo />
+                </Tool>
+                <Tool run={() => editor?.chain().focus().redo().run()} disabled={!editor?.can().redo()} label="Ponów (Ctrl+Y)">
+                  <IcRedo />
+                </Tool>
+                <span className="tool-sep" aria-hidden />
+                <Tool on={editor?.isActive('bold')} run={() => editor?.chain().focus().toggleBold().run()} label="Pogrubienie">
+                  <b>B</b>
+                </Tool>
+                <Tool on={editor?.isActive('italic')} run={() => editor?.chain().focus().toggleItalic().run()} label="Kursywa">
+                  <i>I</i>
+                </Tool>
+                <Tool on={editor?.isActive('underline')} run={() => editor?.chain().focus().toggleUnderline().run()} label="Podkreślenie">
+                  <IcUnderline />
+                </Tool>
+                <Tool on={editor?.isActive('strike')} run={() => editor?.chain().focus().toggleStrike().run()} label="Przekreślenie">
+                  <IcStrike />
+                </Tool>
+                <Tool on={editor?.isActive('highlight')} run={() => editor?.chain().focus().toggleHighlight().run()} label="Zakreślacz" marker>
+                  Zakreśl
+                </Tool>
+                <span className="tool-sep" aria-hidden />
+                <Tool on={editor?.isActive('heading', { level: 2 })} run={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} label="Nagłówek">
+                  H
+                </Tool>
+                <Tool on={editor?.isActive('bulletList')} run={() => editor?.chain().focus().toggleBulletList().run()} label="Lista punktowana">
+                  <IcBullets />
+                </Tool>
+                <Tool on={editor?.isActive('orderedList')} run={() => editor?.chain().focus().toggleOrderedList().run()} label="Lista numerowana">
+                  <IcOrdered />
+                </Tool>
+                <span className="tool-sep" aria-hidden />
+                <Tool on={editor?.isActive('code')} run={() => editor?.chain().focus().toggleCode().run()} label="Kod w tekście">
+                  <IcCode />
+                </Tool>
+                <Tool on={editor?.isActive('codeBlock')} run={() => editor?.chain().focus().toggleCodeBlock().run()} label="Blok kodu">
+                  <IcCodeBlock />
+                </Tool>
+              </div>
+              <div className="editor-scroll panel neon-violet">
+                <EditorContent editor={editor} />
+              </div>
+            </section>
+
+            <aside className="chat panel neon-violet" aria-label="Czat">
+              <div className="chat-head">
+                <div className="chat-title">
+                  <h2>Czat pokoju</h2>
+                  <p className="count">{peers.length} {peers.length === 1 ? 'osoba online' : 'online'}</p>
+                </div>
+                <div className="chat-tools">
+                  <button
+                    className={`icon-btn ${ephemeral ? 'is-on' : ''}`}
+                    onClick={toggleEphemeral}
+                    aria-pressed={ephemeral}
+                    aria-label="Znikające wiadomości (10 min)"
+                    title={ephemeral ? 'Znikające wiadomości: włączone (10 min)' : 'Włącz znikające wiadomości (10 min)'}
+                  >
+                    <IcTimer />
+                  </button>
+                  <button className="icon-btn" onClick={clearChat} aria-label="Wyczyść czat u wszystkich" title="Wyczyść czat u wszystkich">
+                    <IcTrash />
+                  </button>
+                </div>
+              </div>
+              <div className="me-row">
+                <NameEditor identity={identity} onChange={onIdentity} />
+              </div>
+              <ChatList msgs={visible} me={ydoc.clientID} />
+              <ChatInput onSend={send} disabled={hidden || expired} />
+            </aside>
+          </div>
+
+          <nav className="tabs" aria-label="Widok">
+            <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>
+              Notatki
+            </button>
+            <button className={tab === 'chat' ? 'on' : ''} onClick={() => setTab('chat')}>
+              Czat{unread > 0 && <span className="badge">{unread}</span>}
+            </button>
+          </nav>
+        </div>
+      </div>
 
       {dialog === 'qr' && <QrDialog code={code} display={fmtCode(code)} onClose={() => setDialog(null)} onCopy={copyLink} />}
       {dialog === 'close' && (
@@ -610,11 +683,14 @@ function ChatList({ msgs, me }: { msgs: ChatMsg[]; me: number }) {
     <div className="chat-list" ref={ref} aria-live="polite">
       {msgs.length === 0 && <p className="empty">Tu pojawią się wiadomości. Możesz je wyczyścić jednym kliknięciem.</p>}
       {msgs.map((m) => (
-        <div key={m.id} className={`msg ${m.by === me ? 'mine' : ''}`}>
-          <span className="msg-name" style={{ '--c': m.color } as CSSProperties}>
-            {m.name}
+        <div key={m.id} className={`msg ${m.by === me ? 'mine' : ''}`} style={{ '--c': m.color } as CSSProperties}>
+          <span className="msg-avatar" aria-hidden="true">
+            {m.name.charAt(0).toUpperCase()}
           </span>
-          <span className="msg-text">{m.text}</span>
+          <div className="msg-bubble">
+            <span className="msg-name">{m.name}</span>
+            <span className="msg-text">{m.text}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -635,7 +711,7 @@ function ChatInput({ onSend, disabled }: { onSend: (t: string) => void; disabled
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Napisz wiadomość"
+        placeholder="Napisz coś…"
         maxLength={500}
         disabled={disabled}
         aria-label="Wiadomość"

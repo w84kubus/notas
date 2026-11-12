@@ -14,7 +14,7 @@ Stack: React 18 + TypeScript strict + Vite 8, TipTap 3 + Yjs (CRDT), Node 22 z `
 
 ## Specyfikacja
 
-Pełny spec: **`SPEC.md`** w rootcie repo. Wygląd: **`DESIGN.md`** (jedyne źródło prawdy o tokenach).
+Pełny spec: **`SPEC.md`** w rootcie repo. Wygląd: **`DESIGN.md`** (jedyne źródło prawdy o tokenach; motyw „Neon” wg makiet Jakuba).
 Żaden z nich nie jest ładowany automatycznie — czytaj na żądanie.
 
 - Przed pracą nad serwerem: `SPEC.md` §3 (model pokoju) i §5 (limity).
@@ -56,7 +56,7 @@ Pełny spec: **`SPEC.md`** w rootcie repo. Wygląd: **`DESIGN.md`** (jedyne źr�
 - Przed zgłoszeniem „gotowe" odpal `npm run typecheck` i `npm test`. Oba muszą przejść.
 - **Każdy push na `main` wdraża produkcję i kasuje wszystkie aktywne pokoje.** Grupuj zmiany
   w jeden commit, nie pushuj drobiazgów jeden po drugim.
-- Zmiany interfejsu sprawdzaj w przeglądarce: oba motywy (jasny i ciemny) oraz okno 380 px.
+- Zmiany interfejsu sprawdzaj w przeglądarce: szeroko (1440), średnio (900), okno mini (380 × 540) i telefon (390 × 844).
 
 ## Komendy
 
@@ -82,16 +82,42 @@ w `.claude/launch.json` folderu nadrzędnego.
 - [x] Faza 7 — wdrożenie na Render z GitHuba, README PL/EN, SPEC, DESIGN
 - [x] Faza 8 — cofnij/ponów, menu pokoju (⋯), kod QR, „Zamknij pokój dla wszystkich" (kod 4001),
       strona Prywatność, workflow `keepalive.yml`
+- [x] Faza 9 — redesign „Neon” wg makiet: ekran startowy, pokój z paskiem bocznym (Znika za, kod, QR, Panic Mode),
+      dymki czatu, nowa paleta osób, audyt web-design-guidelines (DESIGN.md)
 
 ### Co realnie zostało
 
 - Podpięcie domeny **notas.pl** (Render → Settings → Custom Domains)
 - Test w Firefoksie i Safari (tam okno mini to zwykłe okienko)
 - Testy interfejsu (dziś tylko serwer ma testy automatyczne)
+- Zgoda na pobranie czcionki Barlow Condensed (`@fontsource`) i ilustrowanych awatarów do czatu (DiceBear) — makiety je mają, kod działa bez nich
 - Wersja angielska interfejsu (pozostałe projekty mają PL/EN)
 - Wzory matematyczne (KaTeX), tabele, bloki kodu
 
 ## Konwencje, które łatwo przeoczyć
+
+### Redesign „Neon” (12.11.2026)
+
+Wygląd wg trzech makiet (patrz `DESIGN.md`). Rzeczy, które łatwo zepsuć:
+
+- **Układ pokoju zależy od szerokości okna** (container queries na `.room`): ≥ 1100 px pasek boczny `.side`, poniżej
+  go nie ma, a kod i obecni są w `.bar`. Nie sprawdzaj układu `@media`, tylko `@container`.
+- **Kontrast neonów liczymy, nie zgadujemy.** Biały tekst na gradiencie przycisku miał na różowym końcu 3,2 : 1;
+  końcówka to `#DB2777` (≥ 4,6 : 1). Kolory osób mają ciemny tekst (`#140A26`) i są sprawdzone ≥ 6,8 : 1.
+- **QR jest gradientowy, ale na białej karcie** (`useQrSvg` w `RoomMenu.tsx`). Nie odwracaj kolorów.
+- **„Znika za”** czyta `expiresInMs` z `GET /api/rooms/:kod` (serwer: `lastActive + TTL − teraz`), odświeżane co minutę.
+- **Poświata logo animuje `opacity` pseudo-elementu** (`::before` z `content: attr(data-text)`), nie `filter`.
+- **Po przebudowie (`npm run build`) otwarta karta ma stare nazwy plików** i leniwy fragment `Room-*.js` znika
+  („Failed to fetch dynamically imported module”). To nie błąd aplikacji: odśwież kartę.
+
+### Testowanie z symulowanymi osobami
+
+Do zrzutów ekranu używam skryptu łączącego kilka klientów Yjs z pokojem (obecność + wiadomości). **Zatrzymaj go
+(`pkill -f peers.cjs`) przed restartem serwera**: po restarcie pokój nie istnieje, a skrypt dalej próbuje się łączyć,
+co nalicza błędne próby z tego samego adresu i **blokuje własny podgląd limitem (429)**. Serwer podglądu bywa też
+zatrzymywany przez aplikację podczas dłuższej przerwy; sprawdź `curl localhost:8791/healthz`.
+Narzędzie odczytu obrazów potrafi zwrócić **starą wersję** pliku o tej samej nazwie. Sprawdź czas zapisu (`ls -l`)
+albo skopiuj plik pod nową nazwę, zanim uznasz zrzut za błędny.
 
 ### Zamknięcie pokoju: znacznik `closed`, nie tylko kod 4001
 

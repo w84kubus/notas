@@ -41,38 +41,34 @@ Aplikacja jest robiona pod salę wykładową, więc ma być **szybka, mała i dy
 
 1. 🏠 **Zakładasz pokój** - jedno kliknięcie, dostajesz kod w stylu `K7M 2QX`
 2. 📱 **Podajesz kod** - albo link, każdy wchodzi z dowolnej przeglądarki
-3. ✍️ **Piszecie razem** - jeden dokument, żywe kursory z pseudonimami, zakreślacz
+3. ✍️ **Piszecie razem** - jeden dokument, żywe kursory z pseudonimami, zakreślacz, bloki kodu
 4. 🪟 **Zmniejszasz** - małe, pływające okno, które zostaje nad innymi
 5. 🫥 **Ukrywasz** - `Esc` i na ekranie jest pusta, biała strona
 
 ## Zrzuty ekranu
 
-| Start | Pokój (jasny motyw) |
+Wygląd to ciemny motyw „neon”: głęboka fioletowa noc, szklane panele ze świecącymi krawędziami i jedno gradientowe logo.
+
+| Start | Pokój |
 |---|---|
-| ![Ekran startowy](docs/screenshots/start.png) | ![Pokój w jasnym motywie](docs/screenshots/pokoj-jasny.png) |
+| ![Ekran startowy](docs/screenshots/start.png) | ![Pokój: pasek boczny z czasem do wygaśnięcia, kodem i QR; w środku notatki; po prawej czat](docs/screenshots/pokoj.png) |
 
-### Menu pokoju i kod QR
-
-Pokazujesz ekran, wszyscy skanują. Menu (⋯) jest takie samo w dużym oknie i w oknie mini.
-
-| Kod QR | Menu w oknie mini |
-|---|---|
-| ![Okno z kodem QR](docs/screenshots/qr.png) | ![Menu pokoju w oknie mini](docs/screenshots/menu-mini.png) |
-
-### Ciemny motyw
-
-Interfejs idzie za motywem systemu. Nic nie trzeba ustawiać ani przełączać.
-
-![Pokój w ciemnym motywie: notatki, czworo ludzi i czat](docs/screenshots/pokoj-ciemny.png)
+Na szerokim ekranie pokój ma trzy kolumny: pasek boczny (ile pokój jeszcze pożyje, kod, kod QR i przycisk **Panic Mode**), notatki i czat.
 
 ### Okno mini (380 × 540 px)
 
 Ten sam pokój w oknie, które zaparkujesz w rogu ekranu. Układ zależy od szerokości okna, a nie od
 urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 
-| Notatki | Czat |
-|---|---|
-| ![Okno mini: notatki](docs/screenshots/mini-notatki.png) | ![Okno mini: czat](docs/screenshots/mini-czat.png) |
+| Notatki | Czat | Menu |
+|---|---|---|
+| ![Okno mini: notatki](docs/screenshots/mini-notatki.png) | ![Okno mini: czat](docs/screenshots/mini-czat.png) | ![Menu pokoju w oknie mini](docs/screenshots/menu-mini.png) |
+
+### Kod QR
+
+Pokazujesz ekran, wszyscy skanują. Kod jest fioletowo-różowy na białej karcie, więc telefony czytają go pewnie.
+
+![Okno z kodem QR](docs/screenshots/qr.png)
 
 ## Funkcje
 
@@ -80,7 +76,7 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 - **6-znakowy kod pokoju** - alfabet bez znaków do pomylenia (bez `0 O 1 I L`), więc da się go przeczytać na głos albo z kartki. 31 znaków, ~887 milionów kodów
 - **Pokój trzeba najpierw założyć** - wpisanie losowego kodu niczego nie tworzy, po prostu się nie uda
 - **Kod albo link** - `notas.pl/K7M2QX` wchodzi prosto do pokoju; plakietka z kodem w rogu kopiuje link
-- **Pokoje wygasają** - 12 godzin bez ruchu i pokój znika razem z notatkami i czatem
+- **Pokoje wygasają** - 12 godzin bez ruchu i pokój znika razem z notatkami i czatem. Pasek boczny pokazuje, ile czasu zostało („Znika za”), a każda zmiana w pokoju liczy te 12 godzin od nowa
 - **Do 30 osób** w pokoju
 - **Kod QR** - jedno kliknięcie w menu pokazuje kod do zeskanowania, przydatne, gdy pokój wisi na projektorze
 - **Zamknij pokój dla wszystkich** - po potwierdzeniu notatki i czat znikają z serwera od razu. Wszyscy, którzy jeszcze są w pokoju, widzą „Pokój został zamknięty” i mogą wcześniej pobrać notatki
@@ -122,7 +118,7 @@ urządzenia, więc notatki i czat zamieniają się w dwie zakładki.
 
 ### PWA
 - **Instalowalna** - manifest i service worker dla szkieletu aplikacji
-- **Jasny i ciemny motyw** z ustawień systemu, respektuje `prefers-reduced-motion`
+- **Jeden neonowy ciemny motyw**, respektuje `prefers-reduced-motion`, uwzględnia bezpieczne obszary telefonów z wycięciem
 
 ## Stos technologiczny
 
@@ -155,7 +151,9 @@ src/
 ├── Privacy.tsx             # strona prywatności
 ├── identity.ts             # losowy pseudonim + kolor, trzymane w karcie (sessionStorage)
 ├── icons.tsx               # ikony SVG inline
-└── styles.css              # tokeny, jasny i ciemny motyw, container queries
+├── Side.tsx                # pasek boczny pokoju: czas do wygaśnięcia, kod, QR, Panic Mode
+├── art.tsx                 # ręcznie rysowane ilustracje SVG i tło ekranu startowego
+└── styles.css              # tokeny w trzech warstwach, motyw neon, container queries
 
 public/                     # manifest, service worker, ikony
 docs/screenshots/           # zrzuty do README

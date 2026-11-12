@@ -45,38 +45,34 @@ It is built for a lecture hall, so it is **quick, small and discreet**:
 
 1. 🏠 **Create a room** - one click, you get a code like `K7M 2QX`
 2. 📱 **Share the code** - or the link, everyone joins from any browser
-3. ✍️ **Write together** - one document, live cursors with nicknames, a highlighter
+3. ✍️ **Write together** - one document, live cursors with nicknames, a highlighter, code blocks
 4. 🪟 **Shrink it** - a small floating window that stays on top of everything else
 5. 🫥 **Hide it** - `Esc` and the screen is a blank white page
 
 ## Screenshots
 
-| Start | Room (light) |
+The look is a dark "neon" theme: a deep purple night, glass panels with glowing edges, and one gradient logo.
+
+| Start | Room |
 |---|---|
-| ![Start screen](docs/screenshots/start.png) | ![A room in the light theme](docs/screenshots/pokoj-jasny.png) |
+| ![Start screen](docs/screenshots/start.png) | ![A room: sidebar with time left, room code and QR; notes in the middle; chat on the right](docs/screenshots/pokoj.png) |
 
-### Room menu and QR code
-
-Show the screen, everyone scans. The menu (⋯) is the same in the big window and in the mini one.
-
-| QR code | Menu in the mini window |
-|---|---|
-| ![QR code dialog](docs/screenshots/qr.png) | ![Room menu in the mini window](docs/screenshots/menu-mini.png) |
-
-### Dark theme
-
-The interface follows the system theme. Nothing is configured, nothing to switch.
-
-![A room in the dark theme: notes, four people and chat](docs/screenshots/pokoj-ciemny.png)
+On a wide screen the room has three columns: a sidebar (how long the room will live, the code, a QR code and the **Panic Mode** button), the notes, and the chat.
 
 ### The mini window (380 × 540 px)
 
 The same room in a window you can park in the corner of the screen. The layout is driven by the
 window width, not by the device, so the notes and the chat become two tabs.
 
-| Notes | Chat |
-|---|---|
-| ![Mini window: notes](docs/screenshots/mini-notatki.png) | ![Mini window: chat](docs/screenshots/mini-czat.png) |
+| Notes | Chat | Menu |
+|---|---|---|
+| ![Mini window: notes](docs/screenshots/mini-notatki.png) | ![Mini window: chat](docs/screenshots/mini-czat.png) | ![Room menu in the mini window](docs/screenshots/menu-mini.png) |
+
+### QR code
+
+Show the screen, everyone scans. The code is violet-to-pink on a white card, so phones read it reliably.
+
+![QR code dialog](docs/screenshots/qr.png)
 
 ## Features
 
@@ -84,7 +80,7 @@ window width, not by the device, so the notes and the chat become two tabs.
 - **6-character room code** - an alphabet without lookalikes (no `0 O 1 I L`), so it survives being read aloud or copied from a slide. 31 characters, ~887 million codes
 - **A room has to be created first** - typing a random code never creates one, it just fails
 - **Link or code** - `notas.pl/K7M2QX` goes straight into the room; the code chip in the corner copies the link
-- **Rooms expire** - 12 hours without activity and the room is gone, along with its notes and chat
+- **Rooms expire** - 12 hours without activity and the room is gone, along with its notes and chat. The sidebar shows the time left ("Znika za"), and every change in the room starts the 12 hours again
 - **Up to 30 people** per room
 - **QR code** - one click in the menu shows a code to scan, for when the room is on a projector
 - **Close the room for everyone** - after a confirmation the notes and the chat vanish from the server at once. Everyone still in the room sees "the room was closed" and can download their notes first
@@ -126,7 +122,7 @@ window width, not by the device, so the notes and the chat become two tabs.
 
 ### PWA
 - **Installable** - manifest plus a service worker for the app shell
-- **Light and dark theme** from the system setting, `prefers-reduced-motion` respected
+- **One neon dark theme**, `prefers-reduced-motion` respected, safe areas for notched phones
 
 ## Tech stack
 
@@ -159,7 +155,9 @@ src/
 ├── Privacy.tsx             # the privacy page
 ├── identity.ts             # random nickname + colour, kept per tab (sessionStorage)
 ├── icons.tsx               # inline SVG icons
-└── styles.css              # tokens, light and dark theme, container queries
+├── Side.tsx                # room sidebar: time left, code, QR, Panic Mode
+├── art.tsx                 # hand-drawn SVG illustrations and the start-screen backdrop
+└── styles.css              # three-layer tokens, neon theme, container queries
 
 public/                     # manifest, service worker, icons
 docs/screenshots/           # README screenshots

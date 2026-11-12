@@ -217,7 +217,10 @@ const server = http.createServer((req, res) => {
       failedJoins.hit(ip)
       return json(res, 404, { error: 'not_found' })
     }
-    return json(res, 200, { ok: true, people: roomPeople(code) })
+    const room = rooms.get(code)
+    // ile zostało do wygaśnięcia przy braku ruchu (każda zmiana w pokoju odnawia pełne TTL)
+    const expiresInMs = Math.max(0, room.lastActive + ROOM_TTL_MS - Date.now())
+    return json(res, 200, { ok: true, people: roomPeople(code), expiresInMs })
   }
 
   if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'not_found' })
